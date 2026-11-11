@@ -1,0 +1,1394 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00A309479E60357C226B5352 /* SubtitleCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94775889EB145A15D7EC726C /* SubtitleCache.swift */; };
+		017C0FA87BFBD071A07CA9DA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EFEA9D6918D5A1D102225FC2 /* Assets.xcassets */; };
+		04704FBB71FC1BBF6324EEFB /* nos.png in Resources */ = {isa = PBXBuildFile; fileRef = 286ECA62940287DECD6C76BC /* nos.png */; };
+		0529722F753F05D1EEF94821 /* 100fm.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6C22498C054FE81DAD204F7D /* 100fm.jpg */; };
+		0567D5AE78FA6A2F8522F524 /* 14tv.png in Resources */ = {isa = PBXBuildFile; fileRef = 5731DCBC2CD834E19EE6FE4B /* 14tv.png */; };
+		06F92FF86CBFD4CFA70A2471 /* TelegramNativePlayback.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 068226E882FC818B7AD7F95C /* TelegramNativePlayback.mp4 */; };
+		07BFEEA3F2FBC3E4C70D157C /* live-music.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 143476DAA7A7D38A6F8983C9 /* live-music.jpg */; };
+		0B4AC80B4A37DD5F1B2EDADD /* kan.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6673E94B98AC31F12CC2C9E8 /* kan.jpg */; };
+		0D44497E256DB1D6FC515AE6 /* savri.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DA38C57386BF422BB28B59EB /* savri.jpg */; };
+		0D8ADEA6C1FB548860A2C136 /* TelegramDownloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9977FC614C46B25131B86F7A /* TelegramDownloads.swift */; };
+		0F83D965B240CA3369810632 /* kan-international.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E255E83CF900A1D76966A3C3 /* kan-international.jpg */; };
+		11D0C43F8725007661534F3B /* mako.png in Resources */ = {isa = PBXBuildFile; fileRef = 2ACF0463FC3A0CA9C8241590 /* mako.png */; };
+		11E2271DA4A9A69F40818E0F /* AnimeStreamResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0864D2D44E944ED24E4A1816 /* AnimeStreamResolver.swift */; };
+		1334AD8DE5A416D550D968A5 /* IPTVOnDemand.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED6ACAC0C20B974C95A0668 /* IPTVOnDemand.swift */; };
+		14DBE039A892952D9038ABBD /* TelegramInteraction.mkv in Resources */ = {isa = PBXBuildFile; fileRef = 839DE76FFEE68E9A8E61188E /* TelegramInteraction.mkv */; };
+		14E49DF3A1C513E8D42D8BCD /* i24news.png in Resources */ = {isa = PBXBuildFile; fileRef = 1928AA86A41A306147ADED50 /* i24news.png */; };
+		1564F9519013D1D0869FFC33 /* kolbarama.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 2CAD50B45D3F194AE9AA3045 /* kolbarama.jpg */; };
+		16DF08F39FC332E8A60EF4AF /* CacheManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 563CB100E597999FB8912ADD /* CacheManagementTests.swift */; };
+		1894680B16FB7CB85C7C70E9 /* TelegramInteraction.mkv in Resources */ = {isa = PBXBuildFile; fileRef = 839DE76FFEE68E9A8E61188E /* TelegramInteraction.mkv */; };
+		1CCD28AD48915EDD7658038E /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = D09CCE1D7B84DF1D53CE7C9E /* ThirdPartyNotices.txt */; };
+		1CEA9CA82075B58383D42506 /* HTMLPayloadParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E827C8CA366386D35D4E6AE2 /* HTMLPayloadParser.swift */; };
+		230FB1E08ABBAD99B0BC0E3F /* GoogleCastDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 43B06F223624A6D45DA56964 /* GoogleCastDynamic */; };
+		235CBF28692EFF311E2A5A15 /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A3AE5C76AA399A4DB1B3CD /* Provider.swift */; };
+		246F61E7129DB4DDAE4F7F43 /* DirectPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E365BCDF01E5D94DAAC2B5BD /* DirectPlayer.swift */; };
+		26C03868D383CB71860028A3 /* TDLibTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B264A15A393D1CC95FF2BDC /* TDLibTransport.swift */; };
+		2BA10E1A0230A0522C41ED84 /* free_food.jpg in Resources */ = {isa = PBXBuildFile; fileRef = FF80BDB1DFCB2DE928FA6AA4 /* free_food.jpg */; };
+		2C7D22720EB074F3F74E0FD8 /* TDLibFramework in Frameworks */ = {isa = PBXBuildFile; productRef = 7FAFF73517B3803CDFB04449 /* TDLibFramework */; };
+		2CC6A606A800E152B1F14AEB /* search.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E0CD0A10651A6D48F3367E48 /* search.jpg */; };
+		2D4D4AA234B018265B157DC9 /* jango.webp in Resources */ = {isa = PBXBuildFile; fileRef = 9894345745CA667E4EAA7585 /* jango.webp */; };
+		2D632C48FF54E8C46D3F0E1B /* live-ch9.png in Resources */ = {isa = PBXBuildFile; fileRef = 538F2DEC70D344C933690931 /* live-ch9.png */; };
+		2D850EBDAAB3F1B38622833D /* TelegramStyledCaptions.mkv in Resources */ = {isa = PBXBuildFile; fileRef = ED0C7B541EC23F8227BBD346 /* TelegramStyledCaptions.mkv */; };
+		2FCBBA9D64274ADD81456431 /* OnDemandLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD1E87CC064A90BEAA91E98 /* OnDemandLibraryView.swift */; };
+		31780167223F2BDCFBE07C7A /* StremioAddonProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC05ACFBBBD96A69A11F66AE /* StremioAddonProvider.swift */; };
+		31A16EFB57010FA186C601FB /* PlayerGestures.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFE2BAD061CA85A6CDC5FB81 /* PlayerGestures.swift */; };
+		31D02EFCD2D4DD5FC2430BBA /* CacheSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1643BD69E41DD09438B2D52 /* CacheSettingsView.swift */; };
+		330FAA6C59DE62BCE9A4BAA0 /* live-reshet13.png in Resources */ = {isa = PBXBuildFile; fileRef = 899728002AE8D67C7C323494 /* live-reshet13.png */; };
+		350F4838D18B39FE6A9A1C1E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C964396B2CFB92CFBC9466B2 /* PrivacyInfo.xcprivacy */; };
+		37222224A659C8F719D82FD9 /* 23tv.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A0650A0B09E0F8DD832AA242 /* 23tv.jpg */; };
+		39A1FFB6A7F43FDFC3CF5E2C /* glglz.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 4AD914E69B118F675CDE8CB4 /* glglz.jpg */; };
+		3C1B0616F9507C73942A0F1E /* MediaServers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52741F2FFC0DF423F39554E /* MediaServers.swift */; };
+		3C47CA41A8117C4CD8DB85DB /* 13nofesh.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 1BF65BED17702AE495CDEB69 /* 13nofesh.jpg */; };
+		3F2A75590E076A201181E366 /* IPTVTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDF1D4691DB924C617D60155 /* IPTVTests.swift */; };
+		40D1BFF915A60C11FFA2C5C1 /* IPTV.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288896A0268015DDBA1F9C22 /* IPTV.swift */; };
+		41B9E21F0E74625F867E4C86 /* CacheManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8B7D36D25548F953B0F56FF /* CacheManagement.swift */; };
+		42CDCFDB9B2154B1D86D281D /* StreamingCommunityModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD3916431204FF6A60793EA /* StreamingCommunityModels.swift */; };
+		451A27FE218026CD9B23D24A /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C92688F0CA8A5A02D1B647 /* Views.swift */; };
+		48C9DDD966684DD4B630EEAE /* 91fm.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E9E04A1CA14656BD3196C692 /* 91fm.jpg */; };
+		4A35296BF9AC2DA93CB61A29 /* knesset.png in Resources */ = {isa = PBXBuildFile; fileRef = 5FBBD8DB3E11B9D6EB334120 /* knesset.png */; };
+		4E27C36A56FF47E7C2FFD2BC /* ViewModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0632BA31D8F0BCC3D3C291E /* ViewModels.swift */; };
+		4E61296A354FB4A7D5584CEE /* CastHTTPRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C25B304BB8EF74CCE7171712 /* CastHTTPRelay.swift */; };
+		512221F7778452EE03F037F6 /* 13reality.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 57F67D54FC3D763BED709B09 /* 13reality.jpg */; };
+		5253BDA00979ACE3BA339841 /* live-sport5.png in Resources */ = {isa = PBXBuildFile; fileRef = 4BFC80D2F815E87F81CC0CA0 /* live-sport5.png */; };
+		537C95D554A200902362D22F /* TelegramPlayerSurfaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5229C3583F49B0961834514B /* TelegramPlayerSurfaces.swift */; };
+		55617DF278801750EE89F847 /* vod.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 5076F3D02B4B7C8F27F5330E /* vod.jpg */; };
+		55809C18F9F657F394DD17F8 /* 102fm.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CF54F31937B14C927F025A7E /* 102fm.jpg */; };
+		558A3F128C72A6F86954F79F /* TelegramTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786CECA5640D7C2081233EBB /* TelegramTests.swift */; };
+		58FD89273F6E3FFED2939771 /* VixcloudResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F271FAE18CCD926ECA07A13E /* VixcloudResolver.swift */; };
+		5C298267542FFEE6B4AB16EE /* PlaybackSeekTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B80455477030DBE7AAAB4B3 /* PlaybackSeekTests.swift */; };
+		5F019516ADAE44661C0CB9BB /* TelegramAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3F419BC4BA91DFB6FA467A /* TelegramAuthView.swift */; };
+		60AFF72E5018A7B1436AA66C /* StremioAddonProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00DD2B72DEF77455070F2B1 /* StremioAddonProviderTests.swift */; };
+		630098D3FE398C3943A1CC65 /* VelagramStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABDF39168972D7130B86D6C /* VelagramStore.swift */; };
+		63018EBDB81AF228D693E604 /* kabbalah.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C577EFAE2C0B304FDC9960BB /* kabbalah.jpg */; };
+		63DA248A5F242B0D67BA535B /* keshet.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C8D37A07185D1C8DA5C3480F /* keshet.jpg */; };
+		63ED8C561BC409CF81B80581 /* PlaybackDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5306CFFF732E938FB86EE50 /* PlaybackDiscovery.swift */; };
+		6574690589A340ABA97F325F /* erets.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C7DD77B476EECB8C252E9834 /* erets.jpg */; };
+		678A8A6ECBCC57287FD90446 /* TelegramPlaybackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F94CC99BDE07DB642F13528 /* TelegramPlaybackTests.swift */; };
+		682BE688583661A6F5CF0886 /* TelegramPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A80639331A68F084C13D8E3 /* TelegramPlayerView.swift */; };
+		69C7AA850C70535B2BAE6771 /* AnimeLivePlaybackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C56EA206C99836A6E81470C /* AnimeLivePlaybackTests.swift */; };
+		6AF7007725EAD887DCD7F2CE /* mizrahit.png in Resources */ = {isa = PBXBuildFile; fileRef = A95C109239DBFFF3D858D519 /* mizrahit.png */; };
+		6B0ECA7C5B06B1E787290FC3 /* TelegramJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05559BE76240D61CC231BD67 /* TelegramJSON.swift */; };
+		6C631AD0A89D01D1CC5D4242 /* SourceResultOrdering.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00736F4713BB69898BCB567 /* SourceResultOrdering.swift */; };
+		6D1B6329A30B635C6AFBE9BB /* free_comedy.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 1AB1474DDA3C245F6E47BBE5 /* free_comedy.jpg */; };
+		6EAFB9135275AB401BD53469 /* makan.png in Resources */ = {isa = PBXBuildFile; fileRef = 8EE78D0A31854D65C494FDA8 /* makan.png */; };
+		71CD916E29D7F734B7F59DDC /* 90fm.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9C8DFD2962CC88E201FD3229 /* 90fm.jpg */; };
+		72D09893C56055EC9ADC6357 /* VLCKit in Frameworks */ = {isa = PBXBuildFile; productRef = A465D955E0ACE9FD0A690962 /* VLCKit */; };
+		743B185D5BD484B2150C285C /* live-ch16.png in Resources */ = {isa = PBXBuildFile; fileRef = F6A51DF17A79DA7B3BB659A0 /* live-ch16.png */; };
+		78D24FC8A647B8A5A6BA46BA /* 1075fm.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C2C952BDDA7874C09D2A8DDC /* 1075fm.jpg */; };
+		799B482C7EB99FD5CE7588F8 /* news.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CF1B887F578C111B40A75AF9 /* news.jpg */; };
+		79A10496F6D6AE00B126F06C /* HTMLPayloadParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC64C135D2EAE249067FB5F /* HTMLPayloadParserTests.swift */; };
+		7A2ABD78F4AA1F4E53126F26 /* TelegramReleaseGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E201BA91D7765E9135370E /* TelegramReleaseGrouping.swift */; };
+		7A648CC9CDED444CB81FCAFF /* live-keshet12.png in Resources */ = {isa = PBXBuildFile; fileRef = 19D4951606C4D547FEC9D9F4 /* live-keshet12.png */; };
+		7C11E9926DA040BF03AA2DF5 /* kolhaymusic.jpg in Resources */ = {isa = PBXBuildFile; fileRef = BFE2F0F5150DB0EED720CB57 /* kolhaymusic.jpg */; };
+		7E6ACD5754B25DD7DB8A959D /* MoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34A9513263540B2AB5D6453 /* MoreView.swift */; };
+		7F621EFBD4FBCFC1D47970FE /* PlaybackDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC610329E450E381B90DF8F /* PlaybackDiagnostics.swift */; };
+		80ABD6920E381F9E7B9A360E /* free_drama.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 88E739E30A94194D7AD2E462 /* free_drama.jpg */; };
+		83D2720EA125EFD23A35ED7E /* 16tv.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0C2859DF30606028ACD821D6 /* 16tv.jpg */; };
+		83D860B3B4AAA19013780F8D /* persian.png in Resources */ = {isa = PBXBuildFile; fileRef = F157587C8E4B978FA4DFCFA9 /* persian.png */; };
+		84D302D3610922CE584A140D /* kolplay.png in Resources */ = {isa = PBXBuildFile; fileRef = 751A11E436E1F85332E7B46E /* kolplay.png */; };
+		85A206628DFFB48A82B78544 /* gly.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A5A328F9DDDFB40B1BC45C7D /* gly.jpg */; };
+		870DF3DA3C6CEA358C8AA008 /* fm95.5.png in Resources */ = {isa = PBXBuildFile; fileRef = B846BC8E7CFA8262A2739984 /* fm95.5.png */; };
+		87F87F85F06648A6D34CA36A /* culture.png in Resources */ = {isa = PBXBuildFile; fileRef = ADA0DF1A44F95E6307D2C432 /* culture.png */; };
+		8B82D8405933CE84BDB6AD04 /* 97fm.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 1D10FF32DD839F0EEB2ED7F5 /* 97fm.jpg */; };
+		8C4E43B4E91AD71430E84A66 /* lectures.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6A06B67AEDB665AA59C999D6 /* lectures.jpg */; };
+		8CFAD447E980F0F58D8BF6D0 /* 1064fm.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A2FE232E0E7A2504E0847B78 /* 1064fm.jpg */; };
+		8D67658F10A016FB881EC65F /* ServerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80953BA86C5A6A81C93CABC2 /* ServerViews.swift */; };
+		9002A4BF210FDF9986E6774C /* 24telad.png in Resources */ = {isa = PBXBuildFile; fileRef = B24862120862131BB8B7E736 /* 24telad.png */; };
+		9239F5681958BB6013219FC5 /* StreamingCommunityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171C21DBA35AF93B69BDEF67 /* StreamingCommunityProvider.swift */; };
+		92C9EB20CD1A72E2F2242940 /* 891fm.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B625459838CCD82FF776F26 /* 891fm.png */; };
+		943C885EC4D4B12077BC1FF1 /* AnimePlaybackProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C7CF0771A87F4C6C4B7240C /* AnimePlaybackProvider.swift */; };
+		95E8DCC82B09124F67BE45F2 /* NativePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2824744F486466F741B37C3 /* NativePlayer.swift */; };
+		9877760D6BB870AD8D06D042 /* TelegramBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A626097BEF21768A388EEAE6 /* TelegramBrowser.swift */; };
+		9AA5F3913DAB1527FF8705B1 /* TelegramNativePlayback.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 068226E882FC818B7AD7F95C /* TelegramNativePlayback.mp4 */; };
+		9F062A9F9C8552EE707EE52E /* 88.png in Resources */ = {isa = PBXBuildFile; fileRef = AAEC08857223ED3A0DAEB681 /* 88.png */; };
+		9F3866D26518140345D391C8 /* 963fm.png in Resources */ = {isa = PBXBuildFile; fileRef = 771D975FAA4141AC92413C5B /* 963fm.png */; };
+		9F6145E269FB43335DE46A7C /* TelegramPlaybackSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DC92B01ABC9072FCBE0490 /* TelegramPlaybackSettings.swift */; };
+		9F8CB770E7534FC855EF26D4 /* LiveResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5797111D662FA922376B4C4F /* LiveResolver.swift */; };
+		9FDE60C13379F88C4D173F4A /* ScannerAndPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34810976E08EFEC53721E688 /* ScannerAndPlayerTests.swift */; };
+		A179C718ABCE5F6F103DB836 /* TelegramCatalogSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEA32E5E51AE6AA8C75BB49 /* TelegramCatalogSearchTests.swift */; };
+		A242AAC0E4F35C4E79731431 /* PlaybackDiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F708E620AE187064787304 /* PlaybackDiscoveryTests.swift */; };
+		A2920AEE5E8183A4A87F0E48 /* MatroskaCaptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF7ECF7A0CEA7E8A552A774 /* MatroskaCaptions.swift */; };
+		A3A89087278AA24B2AEB7144 /* TelegramSurroundPlayback.mkv in Resources */ = {isa = PBXBuildFile; fileRef = 6E57C87E9AB76394A46E3C14 /* TelegramSurroundPlayback.mkv */; };
+		A558E82A812EF2F503FA0DEA /* 10tv.png in Resources */ = {isa = PBXBuildFile; fileRef = D1D7EA2BFAE11DE256C4CED2 /* 10tv.png */; };
+		A5DB1C787BE5414CA9E2A004 /* SkipSegments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6BDFDB17C6678EDE835036 /* SkipSegments.swift */; };
+		A78F4022754AD6F71F57DFE1 /* walla.png in Resources */ = {isa = PBXBuildFile; fileRef = CAA909121630FC2E9FA8E4A2 /* walla.png */; };
+		A993956FB1A9048FF1C6A844 /* live-calcala10.png in Resources */ = {isa = PBXBuildFile; fileRef = A90771C6194A951B078D32BB /* live-calcala10.png */; };
+		AA808F20C706BB8CC7B6E92C /* music.png in Resources */ = {isa = PBXBuildFile; fileRef = 4FA1519238D4D697EE707763 /* music.png */; };
+		AB28E03566C675832CC0A19A /* TelegramCatalogLiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D7CE03C741DDED9B14DC25 /* TelegramCatalogLiveTests.swift */; };
+		AB6F2E95E3BEAFDC34A4DAA7 /* TelegramDetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0736571FA2B14F08952EB2B /* TelegramDetailViews.swift */; };
+		AC704CFC7D9B0A78DB10A58A /* bet.png in Resources */ = {isa = PBXBuildFile; fileRef = 47FE37DE0ABD9808190E454D /* bet.png */; };
+		B1AF43B13D497E4A85745ACB /* kolhay.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 33D8223368904D7A8BC0A482 /* kolhay.jpg */; };
+		B5D766410B9B3A10D7F19F3B /* SystemCaptionStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 079D3D174AA076D7990B4B30 /* SystemCaptionStyle.swift */; };
+		B65B75CF9A7BF5402C8F26BF /* lifestyle.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 8B130203A56392160284B24F /* lifestyle.jpg */; };
+		B7840C32490FC251118DEE55 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C58F81DB25086C0675DDAA28 /* Models.swift */; };
+		B80C60EBD267CD2017BD4AC2 /* PlaybackBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969409DF37459438DFCA91F3 /* PlaybackBaseline.swift */; };
+		B89E66D695606766D227B4D7 /* hatuna.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 88FDB7C8367AF5333530B526 /* hatuna.jpg */; };
+		BB8C452B2BC69DC2EA16824E /* Sport5.png in Resources */ = {isa = PBXBuildFile; fileRef = 979195D57803B2BCDB323140 /* Sport5.png */; };
+		BBE3C6E1BCC9B616E70C1A83 /* CastHTTPRelayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52AB137482258104E1737AF5 /* CastHTTPRelayTests.swift */; };
+		BC59954EEA7CBD45A2C57441 /* 1045fm.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 54A910A650259E2C5C8BDD55 /* 1045fm.jpg */; };
+		BD7312616F3FB739162A83D4 /* 102fmEilat.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A71CD3F601397B642C634417 /* 102fmEilat.jpg */; };
+		BDEBAEA93BC45D67F41525CB /* sport1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9E629DE82F1AF2C3D7A6656E /* sport1.jpg */; };
+		BE7E3D5319A60C2C5D512047 /* TelegramModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24FE49660D95A221063DCDA /* TelegramModels.swift */; };
+		BF9831AEEF99F824EEA3F700 /* OpenSourceNoticesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F5A0C7050D00F4BFE4DE11 /* OpenSourceNoticesView.swift */; };
+		C3CCE754AA9CB1504834FEFE /* TelegramStreaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BB7433BBB77A4C0DB9E4C31 /* TelegramStreaming.swift */; };
+		C504432C51192EF4947A5A48 /* PlaybackProgressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 559E08E521A00D95D595B602 /* PlaybackProgressTests.swift */; };
+		C668484D91F047435551A6F5 /* PlayerSourceSwitchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D12A5C0A5939FE32EA7B14 /* PlayerSourceSwitchTests.swift */; };
+		C793C4A9C5B1F833B2C37BB6 /* 13.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 727BC0EFA77D4462EC7D9F31 /* 13.jpg */; };
+		C7BF8AEAD69EEFD562297608 /* hidabroot.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6244EBBCC0C24EC50433CBEF /* hidabroot.jpg */; };
+		C89D48F18F177EBD69520BCE /* moreshet.png in Resources */ = {isa = PBXBuildFile; fileRef = 49D818CE75AB0931562C51FA /* moreshet.png */; };
+		D11ADC977E0B650955DFFD08 /* ninja.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0AAF2F22B84280CDE041C988 /* ninja.jpg */; };
+		D283492C9F83DCE1F37FEB11 /* docu.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 7F6832DF0FF3B9974E192DA3 /* docu.jpg */; };
+		D35DC37B261659C7649DFBCC /* TMDBClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DCC1934D2B286D47A39DE2 /* TMDBClient.swift */; };
+		D3DDFDA75F7CEE19CF08C0F5 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E95DBC15808B88F8B2E30A /* LibraryStore.swift */; };
+		D40D4E1AAB42DECD917C4BD0 /* LiveViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BB2E2065DB92A52420494E /* LiveViews.swift */; };
+		D56D4E97332F77C669FD4E96 /* ynet.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 67D4E1ACAF589C179411A96D /* ynet.jpg */; };
+		D9B63DD77F451A1EF6BA4AF2 /* VelagramUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A56AFE17D3CC2587EC15C6F /* VelagramUITests.swift */; };
+		D9C501260AA214E212CBEC73 /* noshmim.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6B1E1E3E9596453F14CBFE98 /* noshmim.jpg */; };
+		D9DCFC2BD1B6FAA1DD35C24A /* TitleSourcesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CB1E6888C8C0995204F28EB /* TitleSourcesView.swift */; };
+		DA069116DE037011E187D365 /* live-now14.png in Resources */ = {isa = PBXBuildFile; fileRef = 0ABB41C85FB4F7D92DAA8967 /* live-now14.png */; };
+		DA214C14323627C4A502835F /* diki.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 16DBB59676EB265F4435BBAE /* diki.jpg */; };
+		DABEDBC8098B86E20D15B23E /* reka.png in Resources */ = {isa = PBXBuildFile; fileRef = 429301DE29DA3313EDB904B9 /* reka.png */; };
+		DB26A8D639DD38E12E37EE79 /* LocalNetworkAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A06688D13C897F863AD3F69 /* LocalNetworkAddress.swift */; };
+		DB4AD673DB4B0FF898F4829B /* 103fm.png in Resources */ = {isa = PBXBuildFile; fileRef = 45214625A79E6BDDD6562D73 /* 103fm.png */; };
+		DBF4C6E8C22F68FCFEE18A70 /* TMDBClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5186BC2158CCB2942368EAB /* TMDBClientTests.swift */; };
+		DC4D13817955FD6A7458B40A /* bb.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CA43CEA5DE2DF032C96546BB /* bb.jpg */; };
+		DEE14B43A74492952A163273 /* GoogleCastPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8140E1544D0A1962D19ACF /* GoogleCastPlayback.swift */; };
+		E1B651840FCD615B93EE1D68 /* free_music.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 7EC443F23A2A2F7AF788B1B2 /* free_music.jpg */; };
+		E22F979C0138578C67E45D19 /* TMDBCatalogMatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BE04F81772EC067EA012CB2 /* TMDBCatalogMatcherTests.swift */; };
+		E27D6C2269403ADDB505D3AC /* SubtitlePipelineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA8338972CF48762CA4B5B96 /* SubtitlePipelineTests.swift */; };
+		E4FCBE12557DDB507E3AFEBC /* TelegramPlayback.mkv in Resources */ = {isa = PBXBuildFile; fileRef = 0BB7EB7B973F81AE73D81962 /* TelegramPlayback.mkv */; };
+		E65B6ABCE173C07B5D307A92 /* PlayerSessionIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A4A1B35A2522818F51F017D /* PlayerSessionIntegrationTests.swift */; };
+		E6E720D1E0D64584AB80AA68 /* UserDataBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7DA96753EE739A70F9DABA /* UserDataBackup.swift */; };
+		E878C5EA03E9D23C5050C70D /* SubtitleProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA8A8F1F750380459BD5FF12 /* SubtitleProviders.swift */; };
+		ED049951173796862AF6E05D /* 99fm.png in Resources */ = {isa = PBXBuildFile; fileRef = C3974182EABDA28A86BF379C /* 99fm.png */; };
+		ED0D8F3F29956479762C6C13 /* TelegramConfiguration.plist in Resources */ = {isa = PBXBuildFile; fileRef = C4992EFE77955F6CCA165820 /* TelegramConfiguration.plist */; };
+		EDECEB3C250A7C9A68AF1DB6 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 646FEA5954055E1AAA9BE0E4 /* AppEnvironment.swift */; };
+		F08053E4447D6480E6955707 /* TelegramLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D17F5390C49D77FDE8DB411 /* TelegramLibraryView.swift */; };
+		F1A7F14F9DEEC9F8DE06423F /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C4F74601A31E7EA6D2F8A5 /* HTTPClient.swift */; };
+		F4288BD9A6E0D050568E5C4C /* 1015fm.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 117F94A93114C0C51F582A5F /* 1015fm.jpg */; };
+		F489A0AD0DE0369183DA55BA /* TelegramStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BFA2BF35082195D54E56B64 /* TelegramStore.swift */; };
+		F65947F75DB307028C884D64 /* musayof.jpg in Resources */ = {isa = PBXBuildFile; fileRef = EAE5FCEEAC1634413382817B /* musayof.jpg */; };
+		F7462A5F8AC59032292E3773 /* VelagramApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E432FEB161604BEEE3B298E6 /* VelagramApp.swift */; };
+		F7B9D4C687D112F15CA836DF /* gimel.png in Resources */ = {isa = PBXBuildFile; fileRef = EF968113E85B2EE0AD5CA095 /* gimel.png */; };
+		F9A3900C455A01C1360B3F74 /* oriental.png in Resources */ = {isa = PBXBuildFile; fileRef = 5705B62A22B357D9A56E05BE /* oriental.png */; };
+		F9B235A199081F325A769F45 /* 9tv.png in Resources */ = {isa = PBXBuildFile; fileRef = 96815073A2565927D2B961D3 /* 9tv.png */; };
+		FA8E39E7EB2B1D70C82F1753 /* TelegramCatalogSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF5734A498ED24AB81B0B3A /* TelegramCatalogSearch.swift */; };
+		FAF4DD46EFD62C1866E31AC3 /* live-ch24.png in Resources */ = {isa = PBXBuildFile; fileRef = FA564922F9937E234EE1BF14 /* live-ch24.png */; };
+		FB356DC01F22AC004AFE61FF /* live.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C45D67387BA99C8A66E88337 /* live.jpg */; };
+		FB58FB9C28CDD4DF60298B65 /* glz.jpg in Resources */ = {isa = PBXBuildFile; fileRef = BA876DDE93F9581C14371343 /* glz.jpg */; };
+		FBC5C057854EB4EA266FC7D1 /* kohav.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C20D94CDA8432BCEBE1E3A61 /* kohav.jpg */; };
+		FBE1C6EBB4AE5E387DC32CFB /* 13comedy.jpg in Resources */ = {isa = PBXBuildFile; fileRef = BC1A868534B097BFD39EEBD0 /* 13comedy.jpg */; };
+		FDAAA647D9523154594E137A /* 101fm.png in Resources */ = {isa = PBXBuildFile; fileRef = 66FF824D1C27667CC5F2E085 /* 101fm.png */; };
+		FE9478AFDFDC0193EA8E3CA3 /* n12.png in Resources */ = {isa = PBXBuildFile; fileRef = 9C97C67E5393643AE4E8DC95 /* n12.png */; };
+		FEA7A3A2979E675C35420B3C /* channels.json in Resources */ = {isa = PBXBuildFile; fileRef = B46A1F2449E58ADB5602DF9E /* channels.json */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		DC35C38771C83E38F25ABA1D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 775AC084093C6D364A23FAE2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9AD04019DD31B34B18751FF7;
+			remoteInfo = Velagram;
+		};
+		E4880AEA1D297044C1A5C022 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 775AC084093C6D364A23FAE2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9AD04019DD31B34B18751FF7;
+			remoteInfo = Velagram;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		05559BE76240D61CC231BD67 /* TelegramJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramJSON.swift; sourceTree = "<group>"; };
+		068226E882FC818B7AD7F95C /* TelegramNativePlayback.mp4 */ = {isa = PBXFileReference; path = TelegramNativePlayback.mp4; sourceTree = "<group>"; };
+		06D7CE03C741DDED9B14DC25 /* TelegramCatalogLiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramCatalogLiveTests.swift; sourceTree = "<group>"; };
+		079D3D174AA076D7990B4B30 /* SystemCaptionStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemCaptionStyle.swift; sourceTree = "<group>"; };
+		0864D2D44E944ED24E4A1816 /* AnimeStreamResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeStreamResolver.swift; sourceTree = "<group>"; };
+		0A80639331A68F084C13D8E3 /* TelegramPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramPlayerView.swift; sourceTree = "<group>"; };
+		0AAF2F22B84280CDE041C988 /* ninja.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ninja.jpg; sourceTree = "<group>"; };
+		0ABB41C85FB4F7D92DAA8967 /* live-now14.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "live-now14.png"; sourceTree = "<group>"; };
+		0BB7EB7B973F81AE73D81962 /* TelegramPlayback.mkv */ = {isa = PBXFileReference; path = TelegramPlayback.mkv; sourceTree = "<group>"; };
+		0BC610329E450E381B90DF8F /* PlaybackDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiagnostics.swift; sourceTree = "<group>"; };
+		0C2859DF30606028ACD821D6 /* 16tv.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 16tv.jpg; sourceTree = "<group>"; };
+		0D17F5390C49D77FDE8DB411 /* TelegramLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramLibraryView.swift; sourceTree = "<group>"; };
+		0D8140E1544D0A1962D19ACF /* GoogleCastPlayback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleCastPlayback.swift; sourceTree = "<group>"; };
+		0E3F419BC4BA91DFB6FA467A /* TelegramAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramAuthView.swift; sourceTree = "<group>"; };
+		117F94A93114C0C51F582A5F /* 1015fm.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 1015fm.jpg; sourceTree = "<group>"; };
+		143476DAA7A7D38A6F8983C9 /* live-music.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "live-music.jpg"; sourceTree = "<group>"; };
+		15E201BA91D7765E9135370E /* TelegramReleaseGrouping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramReleaseGrouping.swift; sourceTree = "<group>"; };
+		16DBB59676EB265F4435BBAE /* diki.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = diki.jpg; sourceTree = "<group>"; };
+		171C21DBA35AF93B69BDEF67 /* StreamingCommunityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingCommunityProvider.swift; sourceTree = "<group>"; };
+		1928AA86A41A306147ADED50 /* i24news.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = i24news.png; sourceTree = "<group>"; };
+		19D4951606C4D547FEC9D9F4 /* live-keshet12.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "live-keshet12.png"; sourceTree = "<group>"; };
+		1AB1474DDA3C245F6E47BBE5 /* free_comedy.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = free_comedy.jpg; sourceTree = "<group>"; };
+		1BF65BED17702AE495CDEB69 /* 13nofesh.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 13nofesh.jpg; sourceTree = "<group>"; };
+		1D10FF32DD839F0EEB2ED7F5 /* 97fm.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 97fm.jpg; sourceTree = "<group>"; };
+		21DCC1934D2B286D47A39DE2 /* TMDBClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDBClient.swift; sourceTree = "<group>"; };
+		286ECA62940287DECD6C76BC /* nos.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nos.png; sourceTree = "<group>"; };
+		288896A0268015DDBA1F9C22 /* IPTV.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPTV.swift; sourceTree = "<group>"; };
+		2ACF0463FC3A0CA9C8241590 /* mako.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mako.png; sourceTree = "<group>"; };
+		2B80455477030DBE7AAAB4B3 /* PlaybackSeekTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackSeekTests.swift; sourceTree = "<group>"; };
+		2CAD50B45D3F194AE9AA3045 /* kolbarama.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kolbarama.jpg; sourceTree = "<group>"; };
+		313BF18E1AD7FD6B2A8000F6 /* VelagramTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = VelagramTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		33D8223368904D7A8BC0A482 /* kolhay.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kolhay.jpg; sourceTree = "<group>"; };
+		34810976E08EFEC53721E688 /* ScannerAndPlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerAndPlayerTests.swift; sourceTree = "<group>"; };
+		39D12A5C0A5939FE32EA7B14 /* PlayerSourceSwitchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSourceSwitchTests.swift; sourceTree = "<group>"; };
+		3B264A15A393D1CC95FF2BDC /* TDLibTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDLibTransport.swift; sourceTree = "<group>"; };
+		429301DE29DA3313EDB904B9 /* reka.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = reka.png; sourceTree = "<group>"; };
+		45214625A79E6BDDD6562D73 /* 103fm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 103fm.png; sourceTree = "<group>"; };
+		47FE37DE0ABD9808190E454D /* bet.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bet.png; sourceTree = "<group>"; };
+		49D818CE75AB0931562C51FA /* moreshet.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = moreshet.png; sourceTree = "<group>"; };
+		4A56AFE17D3CC2587EC15C6F /* VelagramUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VelagramUITests.swift; sourceTree = "<group>"; };
+		4AD914E69B118F675CDE8CB4 /* glglz.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = glglz.jpg; sourceTree = "<group>"; };
+		4BF7ECF7A0CEA7E8A552A774 /* MatroskaCaptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatroskaCaptions.swift; sourceTree = "<group>"; };
+		4BFA2BF35082195D54E56B64 /* TelegramStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramStore.swift; sourceTree = "<group>"; };
+		4BFC80D2F815E87F81CC0CA0 /* live-sport5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "live-sport5.png"; sourceTree = "<group>"; };
+		4FA1519238D4D697EE707763 /* music.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = music.png; sourceTree = "<group>"; };
+		5076F3D02B4B7C8F27F5330E /* vod.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = vod.jpg; sourceTree = "<group>"; };
+		5229C3583F49B0961834514B /* TelegramPlayerSurfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramPlayerSurfaces.swift; sourceTree = "<group>"; };
+		52AB137482258104E1737AF5 /* CastHTTPRelayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastHTTPRelayTests.swift; sourceTree = "<group>"; };
+		538F2DEC70D344C933690931 /* live-ch9.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "live-ch9.png"; sourceTree = "<group>"; };
+		54A910A650259E2C5C8BDD55 /* 1045fm.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 1045fm.jpg; sourceTree = "<group>"; };
+		559E08E521A00D95D595B602 /* PlaybackProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackProgressTests.swift; sourceTree = "<group>"; };
+		563CB100E597999FB8912ADD /* CacheManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheManagementTests.swift; sourceTree = "<group>"; };
+		5705B62A22B357D9A56E05BE /* oriental.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = oriental.png; sourceTree = "<group>"; };
+		5731DCBC2CD834E19EE6FE4B /* 14tv.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 14tv.png; sourceTree = "<group>"; };
+		5797111D662FA922376B4C4F /* LiveResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveResolver.swift; sourceTree = "<group>"; };
+		57F67D54FC3D763BED709B09 /* 13reality.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 13reality.jpg; sourceTree = "<group>"; };
+		5BB7433BBB77A4C0DB9E4C31 /* TelegramStreaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramStreaming.swift; sourceTree = "<group>"; };
+		5EE8E41DBA74F463483C118B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		5FBBD8DB3E11B9D6EB334120 /* knesset.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = knesset.png; sourceTree = "<group>"; };
+		6244EBBCC0C24EC50433CBEF /* hidabroot.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = hidabroot.jpg; sourceTree = "<group>"; };
+		646FEA5954055E1AAA9BE0E4 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		6673E94B98AC31F12CC2C9E8 /* kan.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kan.jpg; sourceTree = "<group>"; };
+		66FF824D1C27667CC5F2E085 /* 101fm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 101fm.png; sourceTree = "<group>"; };
+		67D4E1ACAF589C179411A96D /* ynet.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ynet.jpg; sourceTree = "<group>"; };
+		6A06B67AEDB665AA59C999D6 /* lectures.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = lectures.jpg; sourceTree = "<group>"; };
+		6A4A1B35A2522818F51F017D /* PlayerSessionIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSessionIntegrationTests.swift; sourceTree = "<group>"; };
+		6B1E1E3E9596453F14CBFE98 /* noshmim.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = noshmim.jpg; sourceTree = "<group>"; };
+		6C22498C054FE81DAD204F7D /* 100fm.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 100fm.jpg; sourceTree = "<group>"; };
+		6E57C87E9AB76394A46E3C14 /* TelegramSurroundPlayback.mkv */ = {isa = PBXFileReference; path = TelegramSurroundPlayback.mkv; sourceTree = "<group>"; };
+		727BC0EFA77D4462EC7D9F31 /* 13.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 13.jpg; sourceTree = "<group>"; };
+		751A11E436E1F85332E7B46E /* kolplay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kolplay.png; sourceTree = "<group>"; };
+		771D975FAA4141AC92413C5B /* 963fm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 963fm.png; sourceTree = "<group>"; };
+		786CECA5640D7C2081233EBB /* TelegramTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramTests.swift; sourceTree = "<group>"; };
+		7A06688D13C897F863AD3F69 /* LocalNetworkAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNetworkAddress.swift; sourceTree = "<group>"; };
+		7D6BDFDB17C6678EDE835036 /* SkipSegments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkipSegments.swift; sourceTree = "<group>"; };
+		7EC443F23A2A2F7AF788B1B2 /* free_music.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = free_music.jpg; sourceTree = "<group>"; };
+		7F6832DF0FF3B9974E192DA3 /* docu.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = docu.jpg; sourceTree = "<group>"; };
+		80953BA86C5A6A81C93CABC2 /* ServerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerViews.swift; sourceTree = "<group>"; };
+		839DE76FFEE68E9A8E61188E /* TelegramInteraction.mkv */ = {isa = PBXFileReference; path = TelegramInteraction.mkv; sourceTree = "<group>"; };
+		86C4F74601A31E7EA6D2F8A5 /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPClient.swift; sourceTree = "<group>"; };
+		88E739E30A94194D7AD2E462 /* free_drama.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = free_drama.jpg; sourceTree = "<group>"; };
+		88FDB7C8367AF5333530B526 /* hatuna.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = hatuna.jpg; sourceTree = "<group>"; };
+		899728002AE8D67C7C323494 /* live-reshet13.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "live-reshet13.png"; sourceTree = "<group>"; };
+		8B130203A56392160284B24F /* lifestyle.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = lifestyle.jpg; sourceTree = "<group>"; };
+		8B625459838CCD82FF776F26 /* 891fm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 891fm.png; sourceTree = "<group>"; };
+		8EE78D0A31854D65C494FDA8 /* makan.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = makan.png; sourceTree = "<group>"; };
+		8F94CC99BDE07DB642F13528 /* TelegramPlaybackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramPlaybackTests.swift; sourceTree = "<group>"; };
+		94775889EB145A15D7EC726C /* SubtitleCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleCache.swift; sourceTree = "<group>"; };
+		96815073A2565927D2B961D3 /* 9tv.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 9tv.png; sourceTree = "<group>"; };
+		969409DF37459438DFCA91F3 /* PlaybackBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackBaseline.swift; sourceTree = "<group>"; };
+		979195D57803B2BCDB323140 /* Sport5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Sport5.png; sourceTree = "<group>"; };
+		9894345745CA667E4EAA7585 /* jango.webp */ = {isa = PBXFileReference; path = jango.webp; sourceTree = "<group>"; };
+		9977FC614C46B25131B86F7A /* TelegramDownloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramDownloads.swift; sourceTree = "<group>"; };
+		99A8A6F26B90B3E1720915D2 /* MediaRuntime */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MediaRuntime; path = Packages/MediaRuntime; sourceTree = SOURCE_ROOT; };
+		9BE04F81772EC067EA012CB2 /* TMDBCatalogMatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDBCatalogMatcherTests.swift; sourceTree = "<group>"; };
+		9C56EA206C99836A6E81470C /* AnimeLivePlaybackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimeLivePlaybackTests.swift; sourceTree = "<group>"; };
+		9C7CF0771A87F4C6C4B7240C /* AnimePlaybackProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimePlaybackProvider.swift; sourceTree = "<group>"; };
+		9C8DFD2962CC88E201FD3229 /* 90fm.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 90fm.jpg; sourceTree = "<group>"; };
+		9C97C67E5393643AE4E8DC95 /* n12.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = n12.png; sourceTree = "<group>"; };
+		9CB1E6888C8C0995204F28EB /* TitleSourcesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleSourcesView.swift; sourceTree = "<group>"; };
+		9E629DE82F1AF2C3D7A6656E /* sport1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = sport1.jpg; sourceTree = "<group>"; };
+		A0632BA31D8F0BCC3D3C291E /* ViewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels.swift; sourceTree = "<group>"; };
+		A0650A0B09E0F8DD832AA242 /* 23tv.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 23tv.jpg; sourceTree = "<group>"; };
+		A2FE232E0E7A2504E0847B78 /* 1064fm.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 1064fm.jpg; sourceTree = "<group>"; };
+		A3BB2E2065DB92A52420494E /* LiveViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveViews.swift; sourceTree = "<group>"; };
+		A5186BC2158CCB2942368EAB /* TMDBClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDBClientTests.swift; sourceTree = "<group>"; };
+		A5A328F9DDDFB40B1BC45C7D /* gly.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gly.jpg; sourceTree = "<group>"; };
+		A626097BEF21768A388EEAE6 /* TelegramBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramBrowser.swift; sourceTree = "<group>"; };
+		A71CD3F601397B642C634417 /* 102fmEilat.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 102fmEilat.jpg; sourceTree = "<group>"; };
+		A90771C6194A951B078D32BB /* live-calcala10.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "live-calcala10.png"; sourceTree = "<group>"; };
+		A95C109239DBFFF3D858D519 /* mizrahit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mizrahit.png; sourceTree = "<group>"; };
+		AACA4119E0AFD7E2B7864BE7 /* VelagramUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = VelagramUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAEC08857223ED3A0DAEB681 /* 88.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 88.png; sourceTree = "<group>"; };
+		AB7DA96753EE739A70F9DABA /* UserDataBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataBackup.swift; sourceTree = "<group>"; };
+		ABB8C17C4A69A433683BED82 /* Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.xcconfig; sourceTree = "<group>"; };
+		ADA0DF1A44F95E6307D2C432 /* culture.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = culture.png; sourceTree = "<group>"; };
+		AFAD55BBC5D7EF07F20F6701 /* Velagram.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Velagram.entitlements; sourceTree = "<group>"; };
+		AFE2BAD061CA85A6CDC5FB81 /* PlayerGestures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerGestures.swift; sourceTree = "<group>"; };
+		B0736571FA2B14F08952EB2B /* TelegramDetailViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramDetailViews.swift; sourceTree = "<group>"; };
+		B24862120862131BB8B7E736 /* 24telad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 24telad.png; sourceTree = "<group>"; };
+		B46A1F2449E58ADB5602DF9E /* channels.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = channels.json; sourceTree = "<group>"; };
+		B4C92688F0CA8A5A02D1B647 /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
+		B7E95DBC15808B88F8B2E30A /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
+		B846BC8E7CFA8262A2739984 /* fm95.5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = fm95.5.png; sourceTree = "<group>"; };
+		BA876DDE93F9581C14371343 /* glz.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = glz.jpg; sourceTree = "<group>"; };
+		BC1A868534B097BFD39EEBD0 /* 13comedy.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 13comedy.jpg; sourceTree = "<group>"; };
+		BDF1D4691DB924C617D60155 /* IPTVTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPTVTests.swift; sourceTree = "<group>"; };
+		BFE2F0F5150DB0EED720CB57 /* kolhaymusic.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kolhaymusic.jpg; sourceTree = "<group>"; };
+		BFEA32E5E51AE6AA8C75BB49 /* TelegramCatalogSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramCatalogSearchTests.swift; sourceTree = "<group>"; };
+		C00736F4713BB69898BCB567 /* SourceResultOrdering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceResultOrdering.swift; sourceTree = "<group>"; };
+		C00DD2B72DEF77455070F2B1 /* StremioAddonProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StremioAddonProviderTests.swift; sourceTree = "<group>"; };
+		C1F708E620AE187064787304 /* PlaybackDiscoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiscoveryTests.swift; sourceTree = "<group>"; };
+		C20D94CDA8432BCEBE1E3A61 /* kohav.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kohav.jpg; sourceTree = "<group>"; };
+		C25B304BB8EF74CCE7171712 /* CastHTTPRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastHTTPRelay.swift; sourceTree = "<group>"; };
+		C2C952BDDA7874C09D2A8DDC /* 1075fm.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 1075fm.jpg; sourceTree = "<group>"; };
+		C34A9513263540B2AB5D6453 /* MoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreView.swift; sourceTree = "<group>"; };
+		C3974182EABDA28A86BF379C /* 99fm.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 99fm.png; sourceTree = "<group>"; };
+		C45D67387BA99C8A66E88337 /* live.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = live.jpg; sourceTree = "<group>"; };
+		C4992EFE77955F6CCA165820 /* TelegramConfiguration.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = TelegramConfiguration.plist; sourceTree = "<group>"; };
+		C577EFAE2C0B304FDC9960BB /* kabbalah.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kabbalah.jpg; sourceTree = "<group>"; };
+		C58F81DB25086C0675DDAA28 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		C7DD77B476EECB8C252E9834 /* erets.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = erets.jpg; sourceTree = "<group>"; };
+		C8D37A07185D1C8DA5C3480F /* keshet.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = keshet.jpg; sourceTree = "<group>"; };
+		C964396B2CFB92CFBC9466B2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CA43CEA5DE2DF032C96546BB /* bb.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = bb.jpg; sourceTree = "<group>"; };
+		CA8A8F1F750380459BD5FF12 /* SubtitleProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleProviders.swift; sourceTree = "<group>"; };
+		CAA909121630FC2E9FA8E4A2 /* walla.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = walla.png; sourceTree = "<group>"; };
+		CF1B887F578C111B40A75AF9 /* news.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = news.jpg; sourceTree = "<group>"; };
+		CF54F31937B14C927F025A7E /* 102fm.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 102fm.jpg; sourceTree = "<group>"; };
+		D09CCE1D7B84DF1D53CE7C9E /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
+		D1D7EA2BFAE11DE256C4CED2 /* 10tv.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 10tv.png; sourceTree = "<group>"; };
+		D24FE49660D95A221063DCDA /* TelegramModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramModels.swift; sourceTree = "<group>"; };
+		D52741F2FFC0DF423F39554E /* MediaServers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaServers.swift; sourceTree = "<group>"; };
+		D8A3AE5C76AA399A4DB1B3CD /* Provider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
+		DA38C57386BF422BB28B59EB /* savri.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = savri.jpg; sourceTree = "<group>"; };
+		DA8338972CF48762CA4B5B96 /* SubtitlePipelineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitlePipelineTests.swift; sourceTree = "<group>"; };
+		DBD3916431204FF6A60793EA /* StreamingCommunityModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingCommunityModels.swift; sourceTree = "<group>"; };
+		DC05ACFBBBD96A69A11F66AE /* StremioAddonProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StremioAddonProvider.swift; sourceTree = "<group>"; };
+		DCD1E87CC064A90BEAA91E98 /* OnDemandLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnDemandLibraryView.swift; sourceTree = "<group>"; };
+		E0CD0A10651A6D48F3367E48 /* search.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = search.jpg; sourceTree = "<group>"; };
+		E255E83CF900A1D76966A3C3 /* kan-international.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "kan-international.jpg"; sourceTree = "<group>"; };
+		E2824744F486466F741B37C3 /* NativePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePlayer.swift; sourceTree = "<group>"; };
+		E365BCDF01E5D94DAAC2B5BD /* DirectPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectPlayer.swift; sourceTree = "<group>"; };
+		E432FEB161604BEEE3B298E6 /* VelagramApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VelagramApp.swift; sourceTree = "<group>"; };
+		E827C8CA366386D35D4E6AE2 /* HTMLPayloadParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLPayloadParser.swift; sourceTree = "<group>"; };
+		E8B7D36D25548F953B0F56FF /* CacheManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheManagement.swift; sourceTree = "<group>"; };
+		E8F5A0C7050D00F4BFE4DE11 /* OpenSourceNoticesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSourceNoticesView.swift; sourceTree = "<group>"; };
+		E9E04A1CA14656BD3196C692 /* 91fm.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = 91fm.jpg; sourceTree = "<group>"; };
+		EAE5FCEEAC1634413382817B /* musayof.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = musayof.jpg; sourceTree = "<group>"; };
+		ED0C7B541EC23F8227BBD346 /* TelegramStyledCaptions.mkv */ = {isa = PBXFileReference; path = TelegramStyledCaptions.mkv; sourceTree = "<group>"; };
+		EE6B7F3281284517AE1C909B /* Velagram.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Velagram.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EF968113E85B2EE0AD5CA095 /* gimel.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gimel.png; sourceTree = "<group>"; };
+		EFEA9D6918D5A1D102225FC2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F157587C8E4B978FA4DFCFA9 /* persian.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = persian.png; sourceTree = "<group>"; };
+		F1643BD69E41DD09438B2D52 /* CacheSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheSettingsView.swift; sourceTree = "<group>"; };
+		F271FAE18CCD926ECA07A13E /* VixcloudResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VixcloudResolver.swift; sourceTree = "<group>"; };
+		F3DC92B01ABC9072FCBE0490 /* TelegramPlaybackSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramPlaybackSettings.swift; sourceTree = "<group>"; };
+		F5306CFFF732E938FB86EE50 /* PlaybackDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackDiscovery.swift; sourceTree = "<group>"; };
+		F6A51DF17A79DA7B3BB659A0 /* live-ch16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "live-ch16.png"; sourceTree = "<group>"; };
+		FA564922F9937E234EE1BF14 /* live-ch24.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "live-ch24.png"; sourceTree = "<group>"; };
+		FABDF39168972D7130B86D6C /* VelagramStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VelagramStore.swift; sourceTree = "<group>"; };
+		FCF5734A498ED24AB81B0B3A /* TelegramCatalogSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramCatalogSearch.swift; sourceTree = "<group>"; };
+		FDC64C135D2EAE249067FB5F /* HTMLPayloadParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLPayloadParserTests.swift; sourceTree = "<group>"; };
+		FED6ACAC0C20B974C95A0668 /* IPTVOnDemand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPTVOnDemand.swift; sourceTree = "<group>"; };
+		FF80BDB1DFCB2DE928FA6AA4 /* free_food.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = free_food.jpg; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		76E1F253A278D88EDA23E782 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C7D22720EB074F3F74E0FD8 /* TDLibFramework in Frameworks */,
+				72D09893C56055EC9ADC6357 /* VLCKit in Frameworks */,
+				230FB1E08ABBAD99B0BC0E3F /* GoogleCastDynamic in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		18581AA120B4747ED79A656B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				EFEA9D6918D5A1D102225FC2 /* Assets.xcassets */,
+				5EE8E41DBA74F463483C118B /* Info.plist */,
+				C964396B2CFB92CFBC9466B2 /* PrivacyInfo.xcprivacy */,
+				C4992EFE77955F6CCA165820 /* TelegramConfiguration.plist */,
+				D09CCE1D7B84DF1D53CE7C9E /* ThirdPartyNotices.txt */,
+				AFAD55BBC5D7EF07F20F6701 /* Velagram.entitlements */,
+				19C285D9B4A4343913DE656E /* Idan */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		19C285D9B4A4343913DE656E /* Idan */ = {
+			isa = PBXGroup;
+			children = (
+				B46A1F2449E58ADB5602DF9E /* channels.json */,
+				5FAD47411103EAFA1E7001E2 /* images */,
+			);
+			path = Idan;
+			sourceTree = "<group>";
+		};
+		294BDAEF84898F360DC42475 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				99A8A6F26B90B3E1720915D2 /* MediaRuntime */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		46B27D3667BE655A99BE1C42 /* VelagramTests */ = {
+			isa = PBXGroup;
+			children = (
+				9C56EA206C99836A6E81470C /* AnimeLivePlaybackTests.swift */,
+				563CB100E597999FB8912ADD /* CacheManagementTests.swift */,
+				52AB137482258104E1737AF5 /* CastHTTPRelayTests.swift */,
+				FDC64C135D2EAE249067FB5F /* HTMLPayloadParserTests.swift */,
+				BDF1D4691DB924C617D60155 /* IPTVTests.swift */,
+				C1F708E620AE187064787304 /* PlaybackDiscoveryTests.swift */,
+				559E08E521A00D95D595B602 /* PlaybackProgressTests.swift */,
+				2B80455477030DBE7AAAB4B3 /* PlaybackSeekTests.swift */,
+				6A4A1B35A2522818F51F017D /* PlayerSessionIntegrationTests.swift */,
+				39D12A5C0A5939FE32EA7B14 /* PlayerSourceSwitchTests.swift */,
+				34810976E08EFEC53721E688 /* ScannerAndPlayerTests.swift */,
+				C00DD2B72DEF77455070F2B1 /* StremioAddonProviderTests.swift */,
+				DA8338972CF48762CA4B5B96 /* SubtitlePipelineTests.swift */,
+				06D7CE03C741DDED9B14DC25 /* TelegramCatalogLiveTests.swift */,
+				BFEA32E5E51AE6AA8C75BB49 /* TelegramCatalogSearchTests.swift */,
+				8F94CC99BDE07DB642F13528 /* TelegramPlaybackTests.swift */,
+				786CECA5640D7C2081233EBB /* TelegramTests.swift */,
+				9BE04F81772EC067EA012CB2 /* TMDBCatalogMatcherTests.swift */,
+				A5186BC2158CCB2942368EAB /* TMDBClientTests.swift */,
+				CEC118645600DE6656B10C16 /* Fixtures */,
+			);
+			path = VelagramTests;
+			sourceTree = "<group>";
+		};
+		4E134524743E2275E2D7E173 /* Velagram */ = {
+			isa = PBXGroup;
+			children = (
+				E432FEB161604BEEE3B298E6 /* VelagramApp.swift */,
+				D04C9E27333C809C1A71F5C4 /* Core */,
+				EB79208C0FC11B6E871B50C3 /* Features */,
+				18581AA120B4747ED79A656B /* Resources */,
+				A6A8B15DC86C672C46C54D9B /* Services */,
+				B3768B768C4BABCCA3D311CC /* Telegram */,
+			);
+			path = Velagram;
+			sourceTree = "<group>";
+		};
+		5FAD47411103EAFA1E7001E2 /* images */ = {
+			isa = PBXGroup;
+			children = (
+				96815073A2565927D2B961D3 /* 9tv.png */,
+				D1D7EA2BFAE11DE256C4CED2 /* 10tv.png */,
+				727BC0EFA77D4462EC7D9F31 /* 13.jpg */,
+				BC1A868534B097BFD39EEBD0 /* 13comedy.jpg */,
+				1BF65BED17702AE495CDEB69 /* 13nofesh.jpg */,
+				57F67D54FC3D763BED709B09 /* 13reality.jpg */,
+				5731DCBC2CD834E19EE6FE4B /* 14tv.png */,
+				0C2859DF30606028ACD821D6 /* 16tv.jpg */,
+				A0650A0B09E0F8DD832AA242 /* 23tv.jpg */,
+				B24862120862131BB8B7E736 /* 24telad.png */,
+				AAEC08857223ED3A0DAEB681 /* 88.png */,
+				9C8DFD2962CC88E201FD3229 /* 90fm.jpg */,
+				E9E04A1CA14656BD3196C692 /* 91fm.jpg */,
+				1D10FF32DD839F0EEB2ED7F5 /* 97fm.jpg */,
+				C3974182EABDA28A86BF379C /* 99fm.png */,
+				6C22498C054FE81DAD204F7D /* 100fm.jpg */,
+				66FF824D1C27667CC5F2E085 /* 101fm.png */,
+				CF54F31937B14C927F025A7E /* 102fm.jpg */,
+				A71CD3F601397B642C634417 /* 102fmEilat.jpg */,
+				45214625A79E6BDDD6562D73 /* 103fm.png */,
+				8B625459838CCD82FF776F26 /* 891fm.png */,
+				771D975FAA4141AC92413C5B /* 963fm.png */,
+				117F94A93114C0C51F582A5F /* 1015fm.jpg */,
+				54A910A650259E2C5C8BDD55 /* 1045fm.jpg */,
+				A2FE232E0E7A2504E0847B78 /* 1064fm.jpg */,
+				C2C952BDDA7874C09D2A8DDC /* 1075fm.jpg */,
+				CA43CEA5DE2DF032C96546BB /* bb.jpg */,
+				47FE37DE0ABD9808190E454D /* bet.png */,
+				ADA0DF1A44F95E6307D2C432 /* culture.png */,
+				16DBB59676EB265F4435BBAE /* diki.jpg */,
+				7F6832DF0FF3B9974E192DA3 /* docu.jpg */,
+				C7DD77B476EECB8C252E9834 /* erets.jpg */,
+				B846BC8E7CFA8262A2739984 /* fm95.5.png */,
+				1AB1474DDA3C245F6E47BBE5 /* free_comedy.jpg */,
+				88E739E30A94194D7AD2E462 /* free_drama.jpg */,
+				FF80BDB1DFCB2DE928FA6AA4 /* free_food.jpg */,
+				7EC443F23A2A2F7AF788B1B2 /* free_music.jpg */,
+				EF968113E85B2EE0AD5CA095 /* gimel.png */,
+				4AD914E69B118F675CDE8CB4 /* glglz.jpg */,
+				A5A328F9DDDFB40B1BC45C7D /* gly.jpg */,
+				BA876DDE93F9581C14371343 /* glz.jpg */,
+				88FDB7C8367AF5333530B526 /* hatuna.jpg */,
+				6244EBBCC0C24EC50433CBEF /* hidabroot.jpg */,
+				1928AA86A41A306147ADED50 /* i24news.png */,
+				9894345745CA667E4EAA7585 /* jango.webp */,
+				C577EFAE2C0B304FDC9960BB /* kabbalah.jpg */,
+				E255E83CF900A1D76966A3C3 /* kan-international.jpg */,
+				6673E94B98AC31F12CC2C9E8 /* kan.jpg */,
+				C8D37A07185D1C8DA5C3480F /* keshet.jpg */,
+				5FBBD8DB3E11B9D6EB334120 /* knesset.png */,
+				C20D94CDA8432BCEBE1E3A61 /* kohav.jpg */,
+				2CAD50B45D3F194AE9AA3045 /* kolbarama.jpg */,
+				33D8223368904D7A8BC0A482 /* kolhay.jpg */,
+				BFE2F0F5150DB0EED720CB57 /* kolhaymusic.jpg */,
+				751A11E436E1F85332E7B46E /* kolplay.png */,
+				6A06B67AEDB665AA59C999D6 /* lectures.jpg */,
+				8B130203A56392160284B24F /* lifestyle.jpg */,
+				A90771C6194A951B078D32BB /* live-calcala10.png */,
+				538F2DEC70D344C933690931 /* live-ch9.png */,
+				F6A51DF17A79DA7B3BB659A0 /* live-ch16.png */,
+				FA564922F9937E234EE1BF14 /* live-ch24.png */,
+				19D4951606C4D547FEC9D9F4 /* live-keshet12.png */,
+				143476DAA7A7D38A6F8983C9 /* live-music.jpg */,
+				0ABB41C85FB4F7D92DAA8967 /* live-now14.png */,
+				899728002AE8D67C7C323494 /* live-reshet13.png */,
+				4BFC80D2F815E87F81CC0CA0 /* live-sport5.png */,
+				C45D67387BA99C8A66E88337 /* live.jpg */,
+				8EE78D0A31854D65C494FDA8 /* makan.png */,
+				2ACF0463FC3A0CA9C8241590 /* mako.png */,
+				A95C109239DBFFF3D858D519 /* mizrahit.png */,
+				49D818CE75AB0931562C51FA /* moreshet.png */,
+				EAE5FCEEAC1634413382817B /* musayof.jpg */,
+				4FA1519238D4D697EE707763 /* music.png */,
+				9C97C67E5393643AE4E8DC95 /* n12.png */,
+				CF1B887F578C111B40A75AF9 /* news.jpg */,
+				0AAF2F22B84280CDE041C988 /* ninja.jpg */,
+				286ECA62940287DECD6C76BC /* nos.png */,
+				6B1E1E3E9596453F14CBFE98 /* noshmim.jpg */,
+				5705B62A22B357D9A56E05BE /* oriental.png */,
+				F157587C8E4B978FA4DFCFA9 /* persian.png */,
+				429301DE29DA3313EDB904B9 /* reka.png */,
+				DA38C57386BF422BB28B59EB /* savri.jpg */,
+				E0CD0A10651A6D48F3367E48 /* search.jpg */,
+				9E629DE82F1AF2C3D7A6656E /* sport1.jpg */,
+				979195D57803B2BCDB323140 /* Sport5.png */,
+				5076F3D02B4B7C8F27F5330E /* vod.jpg */,
+				CAA909121630FC2E9FA8E4A2 /* walla.png */,
+				67D4E1ACAF589C179411A96D /* ynet.jpg */,
+			);
+			path = images;
+			sourceTree = "<group>";
+		};
+		75DB0270F66E7D60AEBC5B36 /* VelagramUITests */ = {
+			isa = PBXGroup;
+			children = (
+				4A56AFE17D3CC2587EC15C6F /* VelagramUITests.swift */,
+			);
+			path = VelagramUITests;
+			sourceTree = "<group>";
+		};
+		8A1A22610F14C4C646A43659 /* Velagram */ = {
+			isa = PBXGroup;
+			children = (
+				F1643BD69E41DD09438B2D52 /* CacheSettingsView.swift */,
+				E365BCDF01E5D94DAAC2B5BD /* DirectPlayer.swift */,
+				A3BB2E2065DB92A52420494E /* LiveViews.swift */,
+				C34A9513263540B2AB5D6453 /* MoreView.swift */,
+				DCD1E87CC064A90BEAA91E98 /* OnDemandLibraryView.swift */,
+				80953BA86C5A6A81C93CABC2 /* ServerViews.swift */,
+			);
+			path = Velagram;
+			sourceTree = "<group>";
+		};
+		A6A8B15DC86C672C46C54D9B /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				288896A0268015DDBA1F9C22 /* IPTV.swift */,
+				FED6ACAC0C20B974C95A0668 /* IPTVOnDemand.swift */,
+				5797111D662FA922376B4C4F /* LiveResolver.swift */,
+				D52741F2FFC0DF423F39554E /* MediaServers.swift */,
+				FABDF39168972D7130B86D6C /* VelagramStore.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		B3768B768C4BABCCA3D311CC /* Telegram */ = {
+			isa = PBXGroup;
+			children = (
+				C25B304BB8EF74CCE7171712 /* CastHTTPRelay.swift */,
+				0D8140E1544D0A1962D19ACF /* GoogleCastPlayback.swift */,
+				7A06688D13C897F863AD3F69 /* LocalNetworkAddress.swift */,
+				4BF7ECF7A0CEA7E8A552A774 /* MatroskaCaptions.swift */,
+				969409DF37459438DFCA91F3 /* PlaybackBaseline.swift */,
+				0BC610329E450E381B90DF8F /* PlaybackDiagnostics.swift */,
+				AFE2BAD061CA85A6CDC5FB81 /* PlayerGestures.swift */,
+				079D3D174AA076D7990B4B30 /* SystemCaptionStyle.swift */,
+				3B264A15A393D1CC95FF2BDC /* TDLibTransport.swift */,
+				0E3F419BC4BA91DFB6FA467A /* TelegramAuthView.swift */,
+				A626097BEF21768A388EEAE6 /* TelegramBrowser.swift */,
+				FCF5734A498ED24AB81B0B3A /* TelegramCatalogSearch.swift */,
+				B0736571FA2B14F08952EB2B /* TelegramDetailViews.swift */,
+				9977FC614C46B25131B86F7A /* TelegramDownloads.swift */,
+				05559BE76240D61CC231BD67 /* TelegramJSON.swift */,
+				0D17F5390C49D77FDE8DB411 /* TelegramLibraryView.swift */,
+				D24FE49660D95A221063DCDA /* TelegramModels.swift */,
+				F3DC92B01ABC9072FCBE0490 /* TelegramPlaybackSettings.swift */,
+				5229C3583F49B0961834514B /* TelegramPlayerSurfaces.swift */,
+				0A80639331A68F084C13D8E3 /* TelegramPlayerView.swift */,
+				15E201BA91D7765E9135370E /* TelegramReleaseGrouping.swift */,
+				4BFA2BF35082195D54E56B64 /* TelegramStore.swift */,
+				5BB7433BBB77A4C0DB9E4C31 /* TelegramStreaming.swift */,
+			);
+			path = Telegram;
+			sourceTree = "<group>";
+		};
+		CD4B55DF24B906DEEB10D74D /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				ABB8C17C4A69A433683BED82 /* Local.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		CEC118645600DE6656B10C16 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				839DE76FFEE68E9A8E61188E /* TelegramInteraction.mkv */,
+				068226E882FC818B7AD7F95C /* TelegramNativePlayback.mp4 */,
+				0BB7EB7B973F81AE73D81962 /* TelegramPlayback.mkv */,
+				ED0C7B541EC23F8227BBD346 /* TelegramStyledCaptions.mkv */,
+				6E57C87E9AB76394A46E3C14 /* TelegramSurroundPlayback.mkv */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
+		D04C9E27333C809C1A71F5C4 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				9C7CF0771A87F4C6C4B7240C /* AnimePlaybackProvider.swift */,
+				0864D2D44E944ED24E4A1816 /* AnimeStreamResolver.swift */,
+				646FEA5954055E1AAA9BE0E4 /* AppEnvironment.swift */,
+				E8B7D36D25548F953B0F56FF /* CacheManagement.swift */,
+				E827C8CA366386D35D4E6AE2 /* HTMLPayloadParser.swift */,
+				86C4F74601A31E7EA6D2F8A5 /* HTTPClient.swift */,
+				B7E95DBC15808B88F8B2E30A /* LibraryStore.swift */,
+				C58F81DB25086C0675DDAA28 /* Models.swift */,
+				F5306CFFF732E938FB86EE50 /* PlaybackDiscovery.swift */,
+				D8A3AE5C76AA399A4DB1B3CD /* Provider.swift */,
+				7D6BDFDB17C6678EDE835036 /* SkipSegments.swift */,
+				DBD3916431204FF6A60793EA /* StreamingCommunityModels.swift */,
+				171C21DBA35AF93B69BDEF67 /* StreamingCommunityProvider.swift */,
+				DC05ACFBBBD96A69A11F66AE /* StremioAddonProvider.swift */,
+				94775889EB145A15D7EC726C /* SubtitleCache.swift */,
+				CA8A8F1F750380459BD5FF12 /* SubtitleProviders.swift */,
+				21DCC1934D2B286D47A39DE2 /* TMDBClient.swift */,
+				AB7DA96753EE739A70F9DABA /* UserDataBackup.swift */,
+				F271FAE18CCD926ECA07A13E /* VixcloudResolver.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		EB79208C0FC11B6E871B50C3 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				E2824744F486466F741B37C3 /* NativePlayer.swift */,
+				E8F5A0C7050D00F4BFE4DE11 /* OpenSourceNoticesView.swift */,
+				C00736F4713BB69898BCB567 /* SourceResultOrdering.swift */,
+				9CB1E6888C8C0995204F28EB /* TitleSourcesView.swift */,
+				A0632BA31D8F0BCC3D3C291E /* ViewModels.swift */,
+				B4C92688F0CA8A5A02D1B647 /* Views.swift */,
+				8A1A22610F14C4C646A43659 /* Velagram */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		F1CAC27B45AFA1EFB836FA5D = {
+			isa = PBXGroup;
+			children = (
+				CD4B55DF24B906DEEB10D74D /* Config */,
+				294BDAEF84898F360DC42475 /* Packages */,
+				4E134524743E2275E2D7E173 /* Velagram */,
+				46B27D3667BE655A99BE1C42 /* VelagramTests */,
+				75DB0270F66E7D60AEBC5B36 /* VelagramUITests */,
+				F25857D04244B5E54E84698E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F25857D04244B5E54E84698E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EE6B7F3281284517AE1C909B /* Velagram.app */,
+				313BF18E1AD7FD6B2A8000F6 /* VelagramTests.xctest */,
+				AACA4119E0AFD7E2B7864BE7 /* VelagramUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2F9C9073204734A2685318CA /* VelagramTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7B43F29B1E9846E228A039A7 /* Build configuration list for PBXNativeTarget "VelagramTests" */;
+			buildPhases = (
+				ADD825FB7BEF98668B492BC4 /* Sources */,
+				7D367C3F51EC25BD2BA2DDF8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				99973ABA9741F2ED71E44FFB /* PBXTargetDependency */,
+			);
+			name = VelagramTests;
+			packageProductDependencies = (
+			);
+			productName = VelagramTests;
+			productReference = 313BF18E1AD7FD6B2A8000F6 /* VelagramTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		9AD04019DD31B34B18751FF7 /* Velagram */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A49E1611A19988B7A96A51A /* Build configuration list for PBXNativeTarget "Velagram" */;
+			buildPhases = (
+				D260A6CF52BF0246E8B486FD /* Sources */,
+				564699129CC5F90B79BFF1F4 /* Resources */,
+				76E1F253A278D88EDA23E782 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Velagram;
+			packageProductDependencies = (
+				7FAFF73517B3803CDFB04449 /* TDLibFramework */,
+				A465D955E0ACE9FD0A690962 /* VLCKit */,
+				43B06F223624A6D45DA56964 /* GoogleCastDynamic */,
+			);
+			productName = Velagram;
+			productReference = EE6B7F3281284517AE1C909B /* Velagram.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C3F9FA41F7C5AAA96B8978EA /* VelagramUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 57B0DCFCC55119D617F18CD8 /* Build configuration list for PBXNativeTarget "VelagramUITests" */;
+			buildPhases = (
+				52BBA9EBC32E107271FE8529 /* Sources */,
+				4131D5144ED9BFD870139570 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CBE6FF5744373BACA77F3BFC /* PBXTargetDependency */,
+			);
+			name = VelagramUITests;
+			packageProductDependencies = (
+			);
+			productName = VelagramUITests;
+			productReference = AACA4119E0AFD7E2B7864BE7 /* VelagramUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		775AC084093C6D364A23FAE2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					2F9C9073204734A2685318CA = {
+						DevelopmentTeam = A97K2SS8D9;
+						ProvisioningStyle = Automatic;
+					};
+					9AD04019DD31B34B18751FF7 = {
+						DevelopmentTeam = A97K2SS8D9;
+						ProvisioningStyle = Automatic;
+					};
+					C3F9FA41F7C5AAA96B8978EA = {
+						DevelopmentTeam = A97K2SS8D9;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 9AD04019DD31B34B18751FF7;
+					};
+				};
+			};
+			buildConfigurationList = 62DBF797765B6D4863C10294 /* Build configuration list for PBXProject "Velagram" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F1CAC27B45AFA1EFB836FA5D;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C069D1F75F524A6A507B14A8 /* XCRemoteSwiftPackageReference "google-cast-ios-sdk" */,
+				BCF4E856DE1DC99E7E1DE17F /* XCLocalSwiftPackageReference "Packages/MediaRuntime" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = F25857D04244B5E54E84698E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9AD04019DD31B34B18751FF7 /* Velagram */,
+				2F9C9073204734A2685318CA /* VelagramTests */,
+				C3F9FA41F7C5AAA96B8978EA /* VelagramUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4131D5144ED9BFD870139570 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1894680B16FB7CB85C7C70E9 /* TelegramInteraction.mkv in Resources */,
+				9AA5F3913DAB1527FF8705B1 /* TelegramNativePlayback.mp4 in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		564699129CC5F90B79BFF1F4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0529722F753F05D1EEF94821 /* 100fm.jpg in Resources */,
+				F4288BD9A6E0D050568E5C4C /* 1015fm.jpg in Resources */,
+				FDAAA647D9523154594E137A /* 101fm.png in Resources */,
+				55809C18F9F657F394DD17F8 /* 102fm.jpg in Resources */,
+				BD7312616F3FB739162A83D4 /* 102fmEilat.jpg in Resources */,
+				DB4AD673DB4B0FF898F4829B /* 103fm.png in Resources */,
+				BC59954EEA7CBD45A2C57441 /* 1045fm.jpg in Resources */,
+				8CFAD447E980F0F58D8BF6D0 /* 1064fm.jpg in Resources */,
+				78D24FC8A647B8A5A6BA46BA /* 1075fm.jpg in Resources */,
+				A558E82A812EF2F503FA0DEA /* 10tv.png in Resources */,
+				C793C4A9C5B1F833B2C37BB6 /* 13.jpg in Resources */,
+				FBE1C6EBB4AE5E387DC32CFB /* 13comedy.jpg in Resources */,
+				3C47CA41A8117C4CD8DB85DB /* 13nofesh.jpg in Resources */,
+				512221F7778452EE03F037F6 /* 13reality.jpg in Resources */,
+				0567D5AE78FA6A2F8522F524 /* 14tv.png in Resources */,
+				83D2720EA125EFD23A35ED7E /* 16tv.jpg in Resources */,
+				37222224A659C8F719D82FD9 /* 23tv.jpg in Resources */,
+				9002A4BF210FDF9986E6774C /* 24telad.png in Resources */,
+				9F062A9F9C8552EE707EE52E /* 88.png in Resources */,
+				92C9EB20CD1A72E2F2242940 /* 891fm.png in Resources */,
+				71CD916E29D7F734B7F59DDC /* 90fm.jpg in Resources */,
+				48C9DDD966684DD4B630EEAE /* 91fm.jpg in Resources */,
+				9F3866D26518140345D391C8 /* 963fm.png in Resources */,
+				8B82D8405933CE84BDB6AD04 /* 97fm.jpg in Resources */,
+				ED049951173796862AF6E05D /* 99fm.png in Resources */,
+				F9B235A199081F325A769F45 /* 9tv.png in Resources */,
+				017C0FA87BFBD071A07CA9DA /* Assets.xcassets in Resources */,
+				350F4838D18B39FE6A9A1C1E /* PrivacyInfo.xcprivacy in Resources */,
+				BB8C452B2BC69DC2EA16824E /* Sport5.png in Resources */,
+				ED0D8F3F29956479762C6C13 /* TelegramConfiguration.plist in Resources */,
+				1CCD28AD48915EDD7658038E /* ThirdPartyNotices.txt in Resources */,
+				DC4D13817955FD6A7458B40A /* bb.jpg in Resources */,
+				AC704CFC7D9B0A78DB10A58A /* bet.png in Resources */,
+				FEA7A3A2979E675C35420B3C /* channels.json in Resources */,
+				87F87F85F06648A6D34CA36A /* culture.png in Resources */,
+				DA214C14323627C4A502835F /* diki.jpg in Resources */,
+				D283492C9F83DCE1F37FEB11 /* docu.jpg in Resources */,
+				6574690589A340ABA97F325F /* erets.jpg in Resources */,
+				870DF3DA3C6CEA358C8AA008 /* fm95.5.png in Resources */,
+				6D1B6329A30B635C6AFBE9BB /* free_comedy.jpg in Resources */,
+				80ABD6920E381F9E7B9A360E /* free_drama.jpg in Resources */,
+				2BA10E1A0230A0522C41ED84 /* free_food.jpg in Resources */,
+				E1B651840FCD615B93EE1D68 /* free_music.jpg in Resources */,
+				F7B9D4C687D112F15CA836DF /* gimel.png in Resources */,
+				39A1FFB6A7F43FDFC3CF5E2C /* glglz.jpg in Resources */,
+				85A206628DFFB48A82B78544 /* gly.jpg in Resources */,
+				FB58FB9C28CDD4DF60298B65 /* glz.jpg in Resources */,
+				B89E66D695606766D227B4D7 /* hatuna.jpg in Resources */,
+				C7BF8AEAD69EEFD562297608 /* hidabroot.jpg in Resources */,
+				14E49DF3A1C513E8D42D8BCD /* i24news.png in Resources */,
+				2D4D4AA234B018265B157DC9 /* jango.webp in Resources */,
+				63018EBDB81AF228D693E604 /* kabbalah.jpg in Resources */,
+				0F83D965B240CA3369810632 /* kan-international.jpg in Resources */,
+				0B4AC80B4A37DD5F1B2EDADD /* kan.jpg in Resources */,
+				63DA248A5F242B0D67BA535B /* keshet.jpg in Resources */,
+				4A35296BF9AC2DA93CB61A29 /* knesset.png in Resources */,
+				FBC5C057854EB4EA266FC7D1 /* kohav.jpg in Resources */,
+				1564F9519013D1D0869FFC33 /* kolbarama.jpg in Resources */,
+				B1AF43B13D497E4A85745ACB /* kolhay.jpg in Resources */,
+				7C11E9926DA040BF03AA2DF5 /* kolhaymusic.jpg in Resources */,
+				84D302D3610922CE584A140D /* kolplay.png in Resources */,
+				8C4E43B4E91AD71430E84A66 /* lectures.jpg in Resources */,
+				B65B75CF9A7BF5402C8F26BF /* lifestyle.jpg in Resources */,
+				A993956FB1A9048FF1C6A844 /* live-calcala10.png in Resources */,
+				743B185D5BD484B2150C285C /* live-ch16.png in Resources */,
+				FAF4DD46EFD62C1866E31AC3 /* live-ch24.png in Resources */,
+				2D632C48FF54E8C46D3F0E1B /* live-ch9.png in Resources */,
+				7A648CC9CDED444CB81FCAFF /* live-keshet12.png in Resources */,
+				07BFEEA3F2FBC3E4C70D157C /* live-music.jpg in Resources */,
+				DA069116DE037011E187D365 /* live-now14.png in Resources */,
+				330FAA6C59DE62BCE9A4BAA0 /* live-reshet13.png in Resources */,
+				5253BDA00979ACE3BA339841 /* live-sport5.png in Resources */,
+				FB356DC01F22AC004AFE61FF /* live.jpg in Resources */,
+				6EAFB9135275AB401BD53469 /* makan.png in Resources */,
+				11D0C43F8725007661534F3B /* mako.png in Resources */,
+				6AF7007725EAD887DCD7F2CE /* mizrahit.png in Resources */,
+				C89D48F18F177EBD69520BCE /* moreshet.png in Resources */,
+				F65947F75DB307028C884D64 /* musayof.jpg in Resources */,
+				AA808F20C706BB8CC7B6E92C /* music.png in Resources */,
+				FE9478AFDFDC0193EA8E3CA3 /* n12.png in Resources */,
+				799B482C7EB99FD5CE7588F8 /* news.jpg in Resources */,
+				D11ADC977E0B650955DFFD08 /* ninja.jpg in Resources */,
+				04704FBB71FC1BBF6324EEFB /* nos.png in Resources */,
+				D9C501260AA214E212CBEC73 /* noshmim.jpg in Resources */,
+				F9A3900C455A01C1360B3F74 /* oriental.png in Resources */,
+				83D860B3B4AAA19013780F8D /* persian.png in Resources */,
+				DABEDBC8098B86E20D15B23E /* reka.png in Resources */,
+				0D44497E256DB1D6FC515AE6 /* savri.jpg in Resources */,
+				2CC6A606A800E152B1F14AEB /* search.jpg in Resources */,
+				BDEBAEA93BC45D67F41525CB /* sport1.jpg in Resources */,
+				55617DF278801750EE89F847 /* vod.jpg in Resources */,
+				A78F4022754AD6F71F57DFE1 /* walla.png in Resources */,
+				D56D4E97332F77C669FD4E96 /* ynet.jpg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7D367C3F51EC25BD2BA2DDF8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				14DBE039A892952D9038ABBD /* TelegramInteraction.mkv in Resources */,
+				06F92FF86CBFD4CFA70A2471 /* TelegramNativePlayback.mp4 in Resources */,
+				E4FCBE12557DDB507E3AFEBC /* TelegramPlayback.mkv in Resources */,
+				2D850EBDAAB3F1B38622833D /* TelegramStyledCaptions.mkv in Resources */,
+				A3A89087278AA24B2AEB7144 /* TelegramSurroundPlayback.mkv in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		52BBA9EBC32E107271FE8529 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9B63DD77F451A1EF6BA4AF2 /* VelagramUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ADD825FB7BEF98668B492BC4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				69C7AA850C70535B2BAE6771 /* AnimeLivePlaybackTests.swift in Sources */,
+				16DF08F39FC332E8A60EF4AF /* CacheManagementTests.swift in Sources */,
+				BBE3C6E1BCC9B616E70C1A83 /* CastHTTPRelayTests.swift in Sources */,
+				79A10496F6D6AE00B126F06C /* HTMLPayloadParserTests.swift in Sources */,
+				3F2A75590E076A201181E366 /* IPTVTests.swift in Sources */,
+				A242AAC0E4F35C4E79731431 /* PlaybackDiscoveryTests.swift in Sources */,
+				C504432C51192EF4947A5A48 /* PlaybackProgressTests.swift in Sources */,
+				5C298267542FFEE6B4AB16EE /* PlaybackSeekTests.swift in Sources */,
+				E65B6ABCE173C07B5D307A92 /* PlayerSessionIntegrationTests.swift in Sources */,
+				C668484D91F047435551A6F5 /* PlayerSourceSwitchTests.swift in Sources */,
+				9FDE60C13379F88C4D173F4A /* ScannerAndPlayerTests.swift in Sources */,
+				60AFF72E5018A7B1436AA66C /* StremioAddonProviderTests.swift in Sources */,
+				E27D6C2269403ADDB505D3AC /* SubtitlePipelineTests.swift in Sources */,
+				E22F979C0138578C67E45D19 /* TMDBCatalogMatcherTests.swift in Sources */,
+				DBF4C6E8C22F68FCFEE18A70 /* TMDBClientTests.swift in Sources */,
+				AB28E03566C675832CC0A19A /* TelegramCatalogLiveTests.swift in Sources */,
+				A179C718ABCE5F6F103DB836 /* TelegramCatalogSearchTests.swift in Sources */,
+				678A8A6ECBCC57287FD90446 /* TelegramPlaybackTests.swift in Sources */,
+				558A3F128C72A6F86954F79F /* TelegramTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D260A6CF52BF0246E8B486FD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				943C885EC4D4B12077BC1FF1 /* AnimePlaybackProvider.swift in Sources */,
+				11E2271DA4A9A69F40818E0F /* AnimeStreamResolver.swift in Sources */,
+				EDECEB3C250A7C9A68AF1DB6 /* AppEnvironment.swift in Sources */,
+				41B9E21F0E74625F867E4C86 /* CacheManagement.swift in Sources */,
+				31D02EFCD2D4DD5FC2430BBA /* CacheSettingsView.swift in Sources */,
+				4E61296A354FB4A7D5584CEE /* CastHTTPRelay.swift in Sources */,
+				246F61E7129DB4DDAE4F7F43 /* DirectPlayer.swift in Sources */,
+				DEE14B43A74492952A163273 /* GoogleCastPlayback.swift in Sources */,
+				1CEA9CA82075B58383D42506 /* HTMLPayloadParser.swift in Sources */,
+				F1A7F14F9DEEC9F8DE06423F /* HTTPClient.swift in Sources */,
+				40D1BFF915A60C11FFA2C5C1 /* IPTV.swift in Sources */,
+				1334AD8DE5A416D550D968A5 /* IPTVOnDemand.swift in Sources */,
+				D3DDFDA75F7CEE19CF08C0F5 /* LibraryStore.swift in Sources */,
+				9F8CB770E7534FC855EF26D4 /* LiveResolver.swift in Sources */,
+				D40D4E1AAB42DECD917C4BD0 /* LiveViews.swift in Sources */,
+				DB26A8D639DD38E12E37EE79 /* LocalNetworkAddress.swift in Sources */,
+				A2920AEE5E8183A4A87F0E48 /* MatroskaCaptions.swift in Sources */,
+				3C1B0616F9507C73942A0F1E /* MediaServers.swift in Sources */,
+				B7840C32490FC251118DEE55 /* Models.swift in Sources */,
+				7E6ACD5754B25DD7DB8A959D /* MoreView.swift in Sources */,
+				95E8DCC82B09124F67BE45F2 /* NativePlayer.swift in Sources */,
+				2FCBBA9D64274ADD81456431 /* OnDemandLibraryView.swift in Sources */,
+				BF9831AEEF99F824EEA3F700 /* OpenSourceNoticesView.swift in Sources */,
+				B80C60EBD267CD2017BD4AC2 /* PlaybackBaseline.swift in Sources */,
+				7F621EFBD4FBCFC1D47970FE /* PlaybackDiagnostics.swift in Sources */,
+				63ED8C561BC409CF81B80581 /* PlaybackDiscovery.swift in Sources */,
+				31A16EFB57010FA186C601FB /* PlayerGestures.swift in Sources */,
+				235CBF28692EFF311E2A5A15 /* Provider.swift in Sources */,
+				8D67658F10A016FB881EC65F /* ServerViews.swift in Sources */,
+				A5DB1C787BE5414CA9E2A004 /* SkipSegments.swift in Sources */,
+				6C631AD0A89D01D1CC5D4242 /* SourceResultOrdering.swift in Sources */,
+				42CDCFDB9B2154B1D86D281D /* StreamingCommunityModels.swift in Sources */,
+				9239F5681958BB6013219FC5 /* StreamingCommunityProvider.swift in Sources */,
+				31780167223F2BDCFBE07C7A /* StremioAddonProvider.swift in Sources */,
+				00A309479E60357C226B5352 /* SubtitleCache.swift in Sources */,
+				E878C5EA03E9D23C5050C70D /* SubtitleProviders.swift in Sources */,
+				B5D766410B9B3A10D7F19F3B /* SystemCaptionStyle.swift in Sources */,
+				26C03868D383CB71860028A3 /* TDLibTransport.swift in Sources */,
+				D35DC37B261659C7649DFBCC /* TMDBClient.swift in Sources */,
+				5F019516ADAE44661C0CB9BB /* TelegramAuthView.swift in Sources */,
+				9877760D6BB870AD8D06D042 /* TelegramBrowser.swift in Sources */,
+				FA8E39E7EB2B1D70C82F1753 /* TelegramCatalogSearch.swift in Sources */,
+				AB6F2E95E3BEAFDC34A4DAA7 /* TelegramDetailViews.swift in Sources */,
+				0D8ADEA6C1FB548860A2C136 /* TelegramDownloads.swift in Sources */,
+				6B0ECA7C5B06B1E787290FC3 /* TelegramJSON.swift in Sources */,
+				F08053E4447D6480E6955707 /* TelegramLibraryView.swift in Sources */,
+				BE7E3D5319A60C2C5D512047 /* TelegramModels.swift in Sources */,
+				9F6145E269FB43335DE46A7C /* TelegramPlaybackSettings.swift in Sources */,
+				537C95D554A200902362D22F /* TelegramPlayerSurfaces.swift in Sources */,
+				682BE688583661A6F5CF0886 /* TelegramPlayerView.swift in Sources */,
+				7A2ABD78F4AA1F4E53126F26 /* TelegramReleaseGrouping.swift in Sources */,
+				F489A0AD0DE0369183DA55BA /* TelegramStore.swift in Sources */,
+				C3CCE754AA9CB1504834FEFE /* TelegramStreaming.swift in Sources */,
+				D9DCFC2BD1B6FAA1DD35C24A /* TitleSourcesView.swift in Sources */,
+				E6E720D1E0D64584AB80AA68 /* UserDataBackup.swift in Sources */,
+				F7462A5F8AC59032292E3773 /* VelagramApp.swift in Sources */,
+				630098D3FE398C3943A1CC65 /* VelagramStore.swift in Sources */,
+				4E27C36A56FF47E7C2FFD2BC /* ViewModels.swift in Sources */,
+				451A27FE218026CD9B23D24A /* Views.swift in Sources */,
+				58FD89273F6E3FFED2939771 /* VixcloudResolver.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		99973ABA9741F2ED71E44FFB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9AD04019DD31B34B18751FF7 /* Velagram */;
+			targetProxy = DC35C38771C83E38F25ABA1D /* PBXContainerItemProxy */;
+		};
+		CBE6FF5744373BACA77F3BFC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9AD04019DD31B34B18751FF7 /* Velagram */;
+			targetProxy = E4880AEA1D297044C1A5C022 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		47D8DCE193B793EC1DE71D88 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.refael.VelagramTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Velagram.app/Velagram";
+			};
+			name = Release;
+		};
+		73E44EBCF518A5088B6B8D8C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.refael.VelagramUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Velagram;
+			};
+			name = Release;
+		};
+		A1FF35C7E79CA30576CB5940 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Velagram/Resources/Velagram.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = Velagram/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.refael.Velagram;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AC19764B83957322702E336D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.refael.VelagramTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Velagram.app/Velagram";
+			};
+			name = Debug;
+		};
+		B0A8011F61292F3556EF1A9A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Velagram/Resources/Velagram.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = Velagram/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.refael.Velagram;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CBCBA94FA60D066D6BEC18EC /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = ABB8C17C4A69A433683BED82 /* Local.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = A97K2SS8D9;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				OTHER_LDFLAGS = "$(inherited) -framework AppIntents";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+		E84459038B233CBBB5F72C1D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = ABB8C17C4A69A433683BED82 /* Local.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = A97K2SS8D9;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "$(inherited) -framework AppIntents";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		F84D6E4BC9CA074D5DD6A164 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.refael.VelagramUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Velagram;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		57B0DCFCC55119D617F18CD8 /* Build configuration list for PBXNativeTarget "VelagramUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84D6E4BC9CA074D5DD6A164 /* Debug */,
+				73E44EBCF518A5088B6B8D8C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5A49E1611A19988B7A96A51A /* Build configuration list for PBXNativeTarget "Velagram" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1FF35C7E79CA30576CB5940 /* Debug */,
+				B0A8011F61292F3556EF1A9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		62DBF797765B6D4863C10294 /* Build configuration list for PBXProject "Velagram" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E84459038B233CBBB5F72C1D /* Debug */,
+				CBCBA94FA60D066D6BEC18EC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7B43F29B1E9846E228A039A7 /* Build configuration list for PBXNativeTarget "VelagramTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AC19764B83957322702E336D /* Debug */,
+				47D8DCE193B793EC1DE71D88 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		BCF4E856DE1DC99E7E1DE17F /* XCLocalSwiftPackageReference "Packages/MediaRuntime" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MediaRuntime;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C069D1F75F524A6A507B14A8 /* XCRemoteSwiftPackageReference "google-cast-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlecast/google-cast-ios-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = 4.8.6;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		43B06F223624A6D45DA56964 /* GoogleCastDynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C069D1F75F524A6A507B14A8 /* XCRemoteSwiftPackageReference "google-cast-ios-sdk" */;
+			productName = GoogleCastDynamic;
+		};
+		7FAFF73517B3803CDFB04449 /* TDLibFramework */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TDLibFramework;
+		};
+		A465D955E0ACE9FD0A690962 /* VLCKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VLCKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 775AC084093C6D364A23FAE2 /* Project object */;
+}

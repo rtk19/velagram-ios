@@ -1,0 +1,23 @@
+name: iOS tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure clean checkout
+        run: ./scripts/configure.sh
+      - name: Select available iPhone simulator and test
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(v["udid"] for devices in d["devices"].values() for v in devices if "iPhone" in v["name"]))')
+          xcodebuild -project Velagram.xcodeproj -scheme Velagram -destination "platform=iOS Simulator,id=$DEVICE_ID" -only-testing:VelagramTests -resultBundlePath build/Tests.xcresult CODE_SIGNING_ALLOWED=NO test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: build/Tests.xcresult

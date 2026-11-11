@@ -1,0 +1,26 @@
+build/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+audit/apk-strings.txt
+audit/apk-classes.txt
+*.log
+
+__pycache__/
+
+Packages/MediaRuntime/Artifacts/
+
+# Reproducible upstream playback dependencies, fetched by bootstrap-playback.sh
+Packages/KSPlayer/
+Packages/FFmpegKit/
+
+# Local service credentials and generated configuration
+Config/Local.xcconfig
+Config/TelegramConfiguration.local.plist
+Velagram/Resources/TelegramConfiguration.plist
+.env
+.env.*
+*.p12
+*.mobileprovision
+*.ipa
+*.xcarchive

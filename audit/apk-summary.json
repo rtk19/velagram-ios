@@ -1,0 +1,23 @@
+{
+  "apk": "Myko.apk",
+  "sha256": "c5f982fa4f0396ab40173d221f777cf241a7379da858bde73943b12fd6e3aa5d",
+  "package": "com.myko.tv",
+  "version": "0.1.1627",
+  "app_classes_without_generated_lambdas": 932,
+  "bundled_channels": 84,
+  "android_native_libraries": [
+    "libandroidx.graphics.path.so",
+    "libc++_shared.so",
+    "libffmpegJNI.so",
+    "libjnidispatch.so",
+    "libmyko_vlc_style.so",
+    "libmyko_whisper.so",
+    "libonnxruntime.so",
+    "libonnxruntime4j_jni.so",
+    "libsherpa-onnx-jni.so",
+    "libtdjsonjava.so",
+    "libtorrent4j.so",
+    "libvlc.so",
+    "libvlcjni.so"
+  ]
+}
