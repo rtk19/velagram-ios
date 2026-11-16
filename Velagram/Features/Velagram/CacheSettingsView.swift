@@ -10,6 +10,7 @@ struct CacheSettingsView: View {
     @State private var overview = CacheOverview()
     @State private var loading = false
     @State private var cleaning = false
+    @State private var clearDownloads = false
     @State private var confirmation: CacheCleanup?
     @State private var notice: String?
     @State private var failure: String?
@@ -67,7 +68,8 @@ struct CacheSettingsView: View {
             }.disabled(busy).listRowBackground(VelagramTheme.surface)
             Section {
                 LabeledContent("Saved offline videos", value: bytes(overview.savedDownloads))
-                NavigationLink("Manage offline downloads") { TelegramDownloadsView(store: telegram) }
+                NavigationLink("Manage offline downloads") { DownloadsView(store: telegram) }
+                Button("Delete all downloads", role: .destructive) { clearDownloads = true }.disabled(busy || overview.savedDownloads == 0)
             } header: { Text("Offline downloads") } footer: { Text("Manage saved videos separately; Clear all cache does not delete them.") }
                 .listRowBackground(VelagramTheme.surface)
             if cleaning { Section { HStack { ProgressView(); Text("Clearing cache…") } } }
@@ -87,6 +89,12 @@ struct CacheSettingsView: View {
             }
             Button("Cancel", role: .cancel) { confirmation = nil }
         } message: { Text("Cached files will download again when needed. Your account and saved offline videos will stay on this device.") }
+        .confirmationDialog("Delete all saved downloads?", isPresented: $clearDownloads, titleVisibility: .visible) {
+            Button("Delete downloads", role: .destructive) {
+                do { try TelegramDownloads.shared.clearDownloads(); Task { await refresh() } }
+                catch { failure = error.localizedDescription }
+            }
+        } message: { Text("Cached videos and watch history are kept. Saved downloads will need to be downloaded again.") }
         .alert("Cache management", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) { Button("OK") { failure = nil } } message: { Text(failure ?? "") }
     }
     private func bytes(_ value: Int64) -> String { ByteCountFormatter.string(fromByteCount: value, countStyle: .file) }

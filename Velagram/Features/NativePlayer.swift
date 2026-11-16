@@ -3587,7 +3587,44 @@ private actor AudioSessionController {
     }
 }
 
-final class LayoutAwarePlayerViewController: AVPlayerViewController {
+class PlayerControlsTrackingController: AVPlayerViewController {
+    var onControlsVisibilityChange: ((Bool) -> Void)?
+    private var visibilityTimer: Timer?
+    private var lastControlsVisible: Bool?
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        stopVisibilityTracking()
+        refreshControlsVisibility()
+        let timer = Timer(timeInterval: 0.15, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.refreshControlsVisibility() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        visibilityTimer = timer
+    }
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        stopVisibilityTracking()
+    }
+    func stopVisibilityTracking() { visibilityTimer?.invalidate(); visibilityTimer = nil }
+    private func refreshControlsVisibility() {
+        // iOS AVKit has no public transport-visibility delegate. Inspect only public
+        // UIView/UIControl visibility, without depending on AVKit class names or KVC.
+        func hasVisibleControl(_ candidate: UIView, opacity: Float) -> Bool {
+            guard candidate !== contentOverlayView, !candidate.isHidden else { return false }
+            let alpha = opacity * (candidate.layer.presentation()?.opacity ?? Float(candidate.alpha))
+            guard alpha > 0.1 else { return false }
+            if candidate is UIButton, candidate.bounds.width > 8, candidate.bounds.height > 8,
+               candidate.convert(candidate.bounds, to: view).intersects(view.bounds) { return true }
+            return candidate.subviews.contains { hasVisibleControl($0, opacity: alpha) }
+        }
+        let visible = view.window != nil && hasVisibleControl(view, opacity: 1)
+        guard visible != lastControlsVisible else { return }
+        lastControlsVisible = visible
+        onControlsVisibilityChange?(visible)
+    }
+}
+
+final class LayoutAwarePlayerViewController: PlayerControlsTrackingController {
     var onLayout: ((LayoutAwarePlayerViewController) -> Void)?
 
     override func viewDidLayoutSubviews() {
@@ -3617,6 +3654,7 @@ struct NativePlayerController: UIViewControllerRepresentable {
     let onZoomChanged: (Bool) -> Void
     let onWillDismiss: () -> Void
     let onDismiss: () -> Void
+    var onControlsVisibilityChange: ((Bool) -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(
@@ -3635,6 +3673,10 @@ struct NativePlayerController: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> LayoutAwarePlayerViewController {
         let controller = LayoutAwarePlayerViewController()
+        controller.onControlsVisibilityChange = { [weak coordinator = context.coordinator] visible in
+            coordinator?.setControlsVisible(visible)
+            onControlsVisibilityChange?(visible)
+        }
         controller.updatesNowPlayingInfoCenter = false
         controller.player = player
         controller.delegate = context.coordinator
@@ -3670,6 +3712,7 @@ struct NativePlayerController: UIViewControllerRepresentable {
     }
 
     static func dismantleUIViewController(_ controller: LayoutAwarePlayerViewController, coordinator: Coordinator) {
+        controller.stopVisibilityTracking()
         coordinator.stopGestures(); controller.player = nil
     }
 
@@ -3702,7 +3745,6 @@ struct NativePlayerController: UIViewControllerRepresentable {
         private let onWillDismiss: () -> Void
         private var subtitleTimingAvailable = false
         private var lastPlaybackErrorMessage: String?
-        private var hideTask: Task<Void, Never>?
         private weak var player: AVPlayer?
         private weak var playerViewController: AVPlayerViewController?
         private var prefersZoomedToFill: Bool
@@ -3745,7 +3787,6 @@ struct NativePlayerController: UIViewControllerRepresentable {
                     let target = max(0, player.currentTime().seconds + (fraction < 0.32 ? -PlaybackGesturePreferences.skipInterval() : PlaybackGesturePreferences.skipInterval()))
                     player.seek(to: CMTime(seconds: target, preferredTimescale: 600))
                 } else { player.rate == 0 ? player.play() : player.pause() }
-                self?.showSettingsButton()
             }
             modernGestures.onHold = { [weak self] active in
                 guard let self, let player = self.player else { return }
@@ -3765,16 +3806,12 @@ struct NativePlayerController: UIViewControllerRepresentable {
             settingsButton.accessibilityLabel = "Playback settings"
             configureSubtitleTimingControl()
             attachControls(to: overlay)
-            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(playerTapped(_:)))
-            tapGesture.cancelsTouchesInView = false
-            tapGesture.delegate = self
-            controller.view.addGestureRecognizer(tapGesture)
             let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(playerPinched(_:)))
             pinchGesture.cancelsTouchesInView = false
             pinchGesture.delegate = self
             controller.view.addGestureRecognizer(pinchGesture)
             updateQualities(availableQualities, selectedQuality: selectedQuality)
-            showSettingsButton()
+            setControlsVisible(false)
         }
 
         func stopGestures() { modernGestures.remove() }
@@ -3922,14 +3959,12 @@ struct NativePlayerController: UIViewControllerRepresentable {
         }
 
         func updateSubtitleTiming(offset: Double, isAvailable: Bool) {
-            let becameAvailable = !subtitleTimingAvailable && isAvailable
             let availabilityChanged = subtitleTimingAvailable != isAvailable
             subtitleTimingAvailable = isAvailable
             subtitleTimingLabel.text = Self.subtitleTimingText(offset)
             subtitleTimingLabel.accessibilityValue = Self.subtitleTimingAccessibilityValue(offset)
             subtitleTimingControl.isHidden = true
             if availabilityChanged { rebuildSettingsMenu() }
-            if becameAvailable { showSettingsButton() }
         }
 
         private func configureSubtitleTimingControl() {
@@ -3986,12 +4021,10 @@ struct NativePlayerController: UIViewControllerRepresentable {
 
         @objc private func decreaseSubtitleTiming() {
             onAdjustSubtitleTiming(-0.1)
-            showSettingsButton()
         }
 
         @objc private func increaseSubtitleTiming() {
             onAdjustSubtitleTiming(0.1)
-            showSettingsButton()
         }
 
         private static func subtitleTimingText(_ offset: Double) -> String {
@@ -4012,11 +4045,9 @@ struct NativePlayerController: UIViewControllerRepresentable {
                self.selectedQuality == selectedQuality {
                 return
             }
-            let discoveredQualities = availableQualities.isEmpty && !qualities.isEmpty
             availableQualities = qualities
             self.selectedQuality = selectedQuality
             rebuildSettingsMenu()
-            if discoveredQualities { showSettingsButton() }
         }
 
         func updateSources(_ streams: [PlayableStream], selectedID: String?, automatic: Bool, isSearching: Bool,
@@ -4031,7 +4062,6 @@ struct NativePlayerController: UIViewControllerRepresentable {
             guard signature != sourceMenuSignature else { return }
             sourceMenuSignature = signature
             rebuildSettingsMenu()
-            showSettingsButton()
         }
 
         private func rebuildSettingsMenu() {
@@ -4221,51 +4251,11 @@ struct NativePlayerController: UIViewControllerRepresentable {
             settingsButton.menu = UIMenu(title: "Playback Settings", children: sections)
         }
 
-        @objc private func playerTapped(_ gesture: UITapGestureRecognizer) {
-            guard !settingsButton.isHidden
-                    || subtitleTimingAvailable else { return }
-            let buttonLocation = gesture.location(in: settingsButton)
-            guard !settingsButton.bounds.contains(buttonLocation) else {
-                showSettingsButton()
-                return
-            }
-            if let view = gesture.view {
-                let location = gesture.location(in: view)
-                var hitView: UIView? = view.hitTest(location, with: nil)
-                while let current = hitView {
-                    if current is UIControl {
-                        showSettingsButton()
-                        return
-                    }
-                    hitView = current.superview
-                }
-            }
-            settingsButton.alpha > 0.1 ? hideSettingsButton() : showSettingsButton()
-        }
-
-        private func showSettingsButton() {
-            guard !streams.isEmpty
-                    || !availableQualities.isEmpty
-                    || subtitleTimingAvailable else { return }
-            hideTask?.cancel()
-            UIView.animate(withDuration: 0.2) { [settingsButton] in
-                settingsButton.alpha = 0.86
-            }
-            hideTask = Task { @MainActor [weak self] in
-                try? await Task.sleep(for: .seconds(4))
-                guard !Task.isCancelled else { return }
-                self?.hideSettingsButton()
-            }
-        }
-
-        private func hideSettingsButton() {
-            hideTask?.cancel()
-            UIView.animate(withDuration: 0.2) { [settingsButton] in
-                settingsButton.alpha = 0
-            }
-            UIView.animate(withDuration: 0.2) { [subtitleTimingControl] in
-                subtitleTimingControl.alpha = 0
-            }
+        func setControlsVisible(_ visible: Bool) {
+            settingsButton.alpha = visible ? 0.86 : 0
+            settingsButton.isUserInteractionEnabled = visible
+            settingsButton.accessibilityElementsHidden = !visible
+            if !visible { subtitleTimingControl.alpha = 0 }
         }
 
         func gestureRecognizer(

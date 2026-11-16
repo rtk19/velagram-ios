@@ -3,6 +3,25 @@ import Testing
 @testable import Velagram
 
 struct ScannerAndPlayerTests {
+    @Test @MainActor func fastSourcePublishesWhileTelegramIsStillStarting() async throws {
+        let transport = ScannerStartupGate()
+        let store = TelegramStore(transport: transport)
+        let model = TitleSourcesModel()
+        let context = PlaybackLookupContext(request: PlaybackDiscoveryTests.request)
+        let scan = Task { await model.scan(context: context, providers: [ScannerFastProvider()], store: store, pages: 2) }
+        // Telegram remains suspended until the assertions have inspected the UI model.
+        for _ in 0..<100 where !model.web.contains(where: { $0.id == "scanner-fast" }) {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(model.web.contains { $0.id == "scanner-fast" })
+        #expect(model.searching)
+        #expect(model.statuses["scanner-fast"] == "1 sources")
+        scan.cancel()
+        await transport.release()
+        await scan.value
+        #expect(!model.searching)
+    }
+
     private func item(_ name: String, size: Int64 = 88_200_000, id: Int64 = 1, caption: String = "") -> TelegramMedia {
         TelegramMedia(chatID: id, messageID: id, fileID: Int(id), name: name, caption: caption, date: Date(timeIntervalSince1970: Double(id)), size: size,
             duration: 1200, mimeType: "video/x-matroska", thumbnailFileID: nil, kind: .video, remoteURL: nil)
@@ -113,5 +132,117 @@ struct PlaybackDiagnosticsTests {
         let record = try #require(String(contentsOf: diagnostics.url, encoding: .utf8).split(separator: "\n").first)
         let json = try #require(JSONSerialization.jsonObject(with: Data(record.utf8)) as? [String: Any])
         #expect(Set(json.keys) == Set(["session", "time", "event", "metrics"]))
+    }
+}
+
+private struct ScannerFastProvider: PlaybackProvider {
+    let id = "scanner-fast"
+    func candidates(for context: PlaybackLookupContext) async throws -> [PlaybackCandidate] {
+        [PlaybackDiscoveryTests.candidate(id)]
+    }
+}
+
+private actor ScannerStartupGate: TelegramTransport {
+    nonisolated let updates: AsyncStream<TelegramJSON> = AsyncStream { $0.finish() }
+    private var released = false
+    private var continuation: CheckedContinuation<Void, Never>?
+    func request(_ query: TelegramJSON, timeout: TimeInterval) async throws -> TelegramJSON {
+        if !released { await withCheckedContinuation { continuation = $0 } }
+        try Task.checkCancellation()
+        return .request("authorizationStateWaitPhoneNumber")
+    }
+    func release() {
+        released = true
+        continuation?.resume()
+        continuation = nil
+    }
+}
+
+
+@Suite("Source playback history")
+struct SourcePlaybackHistoryTests {
+    @Test @MainActor func historyPersistsAndKeepsEveryPlayedSourceWithoutDuplicates() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let library = LibraryStore(directory: directory)
+        let request = PlaybackDiscoveryTests.request
+        library.recordPlayedSource("web:first", for: request)
+        library.recordPlayedSource("telegram:release", for: request)
+        library.recordPlayedSource("web:first", for: request)
+        library.recordPlayedSource("web:first", for: request)
+        #expect(library.sourceHistory(for: request) == ["web:first", "telegram:release"])
+        #expect(LibraryStore(directory: directory).sourceHistory(for: request) == ["web:first", "telegram:release"])
+    }
+
+    @Test @MainActor func historyIsScopedToAnEpisodeAndSurvivesProviderIdentityChanges() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let library = LibraryStore(directory: directory)
+        func request(provider: String, episode: Int) -> PlaybackRequest {
+            let media = MediaItem(id: provider, providerID: provider, kind: .series, title: "Show", tmdbID: 42)
+            let episode = MediaEpisode(id: "\(provider)-\(episode)", providerID: provider, showID: media.id,
+                seasonNumber: 1, number: episode, title: nil, overview: nil, posterURL: nil)
+            return PlaybackRequest(media: media, episode: episode)
+        }
+        library.recordPlayedSource("web:one", for: request(provider: "tmdb", episode: 1))
+        library.recordPlayedSource("telegram:two", for: request(provider: "tmdb", episode: 2))
+        #expect(library.sourceHistory(for: request(provider: "server", episode: 1)) == ["web:one"])
+        #expect(library.sourceHistory(for: request(provider: "server", episode: 2)) == ["telegram:two"])
+        #expect(library.sourceHistory(for: request(provider: "server", episode: 3)).isEmpty)
+    }
+
+    @Test func adaptiveDownloadProgressDoesNotInventByteCounts() {
+        let progress = DownloadTransferProgress(received: 0, total: 0, bytesPerSecond: 0, sampledAt: 0, mediaFraction: 0.42)
+        #expect(progress.fraction == 0.42)
+        #expect(progress.percentage == "42%")
+        #expect(!progress.sizeLabel.contains("0 bytes"))
+        #expect(progress.speedLabel(now: 10) == "Video download")
+    }
+
+    @Test func legacyDownloadsRemainDecodableAndAdaptivePackagesUseNativePlayback() throws {
+        let media = TelegramMedia(chatID: 0, messageID: 42, fileID: nil, name: "Offline.movpkg", caption: "", date: .now,
+            size: 100, duration: 10, mimeType: "application/vnd.apple.mpegurl", thumbnailFileID: nil, kind: .video, remoteURL: nil)
+        let legacy = TelegramSavedDownload(media: media, filename: "video.mp4", savedAt: .now)
+        let decoded = try JSONDecoder().decode(TelegramSavedDownload.self, from: JSONEncoder().encode(legacy))
+        #expect(decoded.offlineAssetPath == nil)
+        #expect(decoded.url.lastPathComponent == "video.mp4")
+        var package = legacy
+        package.offlineAssetPath = "Library/test.movpkg"
+        #expect(package.url.path == NSHomeDirectory() + "/Library/test.movpkg")
+        #expect(!package.isCached)
+        #expect(TelegramPlayerSession.prefersNative(media))
+    }
+}
+
+
+@Suite(.serialized)
+struct OfflineSourceDownloadIntegrationTests {
+    // Serve a short MP4 and HLS VOD from MYKO_DOWNLOAD_FIXTURE_URL to exercise
+    // the real download stack without provider credentials or third-party media.
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["MYKO_DOWNLOAD_FIXTURE_URL"] != nil),
+          arguments: ["video.mp4", "video.m3u8"])
+    @MainActor func downloadsAndReopensOffline(_ path: String) async throws {
+        let base = try #require(ProcessInfo.processInfo.environment["MYKO_DOWNLOAD_FIXTURE_URL"])
+        let url = try #require(URL(string: base + "/" + path))
+        let id = "offline-integration-" + UUID().uuidString
+        let media = MediaItem(id: id, providerID: "test", kind: .movie, title: "Offline integration")
+        let request = PlaybackRequest(media: media, episode: nil)
+        let source = PlaybackSource(url: url, headers: [:], subtitles: [], preferredPeakBitRate: nil)
+        let candidate = PlaybackCandidate(id: id, preference: .init(providerID: "test", serverName: path, audioLanguage: "en"),
+            providerName: "Local fixture", subtitleKind: .selectable, resolve: { source })
+        let downloads = TelegramDownloads.shared
+        downloads.begin(candidate, request: request)
+        defer { downloads.cancelWeb(id) }
+        for _ in 0..<300 where downloads.webActive.contains(id) {
+            try await Task.sleep(for: .milliseconds(200))
+        }
+        #expect(!downloads.webActive.contains(id), "Download did not finish before timeout")
+        #expect(downloads.webErrors[id] == nil, "\(downloads.webErrors[id] ?? "")")
+        let record = try #require(downloads.available(for: request).first { $0.sourceID == id })
+        defer { try? downloads.remove(record) }
+        #expect(FileManager.default.fileExists(atPath: record.url.path))
+        #expect(downloads.local(record.media) == record.url)
+        #expect(record.media.size > 0)
+        #expect(record.offlineAssetPath != nil || path.hasSuffix(".mp4"))
     }
 }

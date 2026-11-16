@@ -17,7 +17,6 @@ struct MoreView: View {
             }.listRowBackground(VelagramTheme.surface)
             Section("Explore") {
                 NavigationLink { TelegramRootView() } label: { Label("Telegram account & files", systemImage: "paperplane.fill") }
-                NavigationLink { CatalogView(kind: .series) } label: { Label("Series", systemImage: "tv.fill") }
                 NavigationLink { LiveView(radioOnly: true) } label: { Label("Radio & music", systemImage: "radio.fill") }
                 NavigationLink { MediaServersView() } label: { Label("Jellyfin & Emby", systemImage: "server.rack") }
                 NavigationLink { LocalMediaView() } label: { Label("Files & direct streams", systemImage: "folder.fill") }
@@ -45,7 +44,7 @@ struct LiveFavoritesView: View {
     @State private var selection: LiveChannel?
     var body: some View {
         List {
-            let favorites = (BundledChannels.load() + store.channels).filter { store.favorites.contains($0.id) }
+            let favorites = store.liveChannels.filter { store.favorites.contains($0.id) }
             if favorites.isEmpty { ContentUnavailableView("Your favorites live here", systemImage: "star", description: Text("Tap the star beside any TV or radio channel to save it.")) }
             ForEach(favorites) { channel in
                 Button { selection = channel } label: { HStack { ChannelArtwork(channel: channel).frame(width: 64, height: 44); Text(channel.name); Spacer(); Image(systemName: "play.fill") } }.buttonStyle(.plain)

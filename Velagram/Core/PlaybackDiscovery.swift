@@ -26,20 +26,38 @@ enum StreamSubtitleKind: String, Sendable {
     case selectable, embeddedEnglish, unknown
 }
 
+/// Providers supply their identity once; every source surface can render it.
+/// New providers may use any stable ID, display name and SF Symbol.
+struct SourceIdentity: Hashable, Sendable {
+    enum Tint: Hashable, Sendable { case cyan, purple, orange, green, teal }
+    let id: String
+    let name: String
+    var systemImage: String = "square.stack.fill"
+    var tint: Tint = .teal
+
+    static let telegram = SourceIdentity(id: "telegram", name: "Telegram", systemImage: "paperplane.fill", tint: .cyan)
+    static let iptv = SourceIdentity(id: "iptv", name: "IPTV", systemImage: "tv.fill", tint: .purple)
+    static let jellyfin = SourceIdentity(id: "jellyfin", name: "Jellyfin", systemImage: "server.rack", tint: .purple)
+    static let emby = SourceIdentity(id: "emby", name: "Emby", systemImage: "server.rack", tint: .green)
+}
+
 struct PlaybackCandidate: Identifiable, Sendable {
     let id: String
     let preference: PlaybackSourcePreference
     let providerName: String
+    let sourceIdentity: SourceIdentity
     let subtitleKind: StreamSubtitleKind
     let displayMetadata: StreamDisplayMetadata?
     let resolve: @Sendable () async throws -> PlaybackSource
 
     init(id: String, preference: PlaybackSourcePreference, providerName: String,
-         subtitleKind: StreamSubtitleKind, displayMetadata: StreamDisplayMetadata? = nil,
+         subtitleKind: StreamSubtitleKind, displayMetadata: StreamDisplayMetadata? = nil, sourceIdentity: SourceIdentity? = nil,
          resolve: @escaping @Sendable () async throws -> PlaybackSource) {
         self.id = id
         self.preference = preference
         self.providerName = providerName
+        self.sourceIdentity = sourceIdentity ?? (preference.providerID == "iptv" ? .iptv :
+            SourceIdentity(id: preference.providerID, name: providerName, systemImage: "globe", tint: .orange))
         self.subtitleKind = subtitleKind
         self.displayMetadata = displayMetadata
         self.resolve = resolve
@@ -59,6 +77,7 @@ struct PlayableStream: Identifiable, Sendable {
     let candidate: PlaybackCandidate
     let source: PlaybackSource
     let qualities: [StreamQuality]
+    var catchupReplay: LiveChannel? = nil
     var id: String { candidate.id }
     var label: String {
         if let metadata = candidate.displayMetadata {
@@ -83,6 +102,8 @@ struct PlaybackLookupContext: Sendable {
     var alternativeTitles: [String] = []
     var seasonTitle: String? = nil
     var seasonYear: Int? = nil
+    var isAnime: Bool = false
+    var seasonRelativeEpisodeNumber: Int? = nil
     var absoluteEpisodeNumber: Int? = nil
     var seasonEpisodeCount: Int? = nil
     var titles: [String] {
@@ -223,7 +244,7 @@ final class PlaybackDiscovery {
                 candidate.preference.audioLanguage == "ja" ? .embeddedEnglish : .selectable
         } else { subtitleKind = candidate.subtitleKind }
         let verified = PlaybackCandidate(id: candidate.id, preference: candidate.preference, providerName: candidate.providerName,
-            subtitleKind: subtitleKind, displayMetadata: candidate.displayMetadata, resolve: candidate.resolve)
+            subtitleKind: subtitleKind, displayMetadata: candidate.displayMetadata, sourceIdentity: candidate.sourceIdentity, resolve: candidate.resolve)
         PlaybackStartupTrace.mark(
             "candidate DONE id=\(candidate.id) total=\(PlaybackStartupTrace.duration(since: perfStart))ms"
         )

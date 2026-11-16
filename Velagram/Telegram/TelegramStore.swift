@@ -128,6 +128,7 @@ import UIKit
         case "updateFile":
             if let file = TelegramFile(update["file"]) {
                 files[file.id] = file
+                TelegramDownloads.shared.completed(file)
                 if file.completed, requestedThumbnails.contains(file.id), !file.localPath.isEmpty { thumbnails[file.id] = file.localPath }
             }
         default: break

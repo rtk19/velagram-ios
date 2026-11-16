@@ -925,9 +925,9 @@ final class PlayerViewModel: ObservableObject {
             }
             let enrichment = Task { await environment.playbackContext(for: playbackRequest) }
             contextTask = enrichment
-            let registered = await environment.registry.playbackProviders()
+            let registered = await environment.registry.playbackProviders() + VelagramStore.shared.mediaServerProviders()
             let providers = registered.map { provider -> any PlaybackProvider in
-                if provider is StreamingCommunityPlaybackProvider { return provider }
+                if provider is StreamingCommunityPlaybackProvider || provider is MediaServerPlaybackProvider { return provider }
                 return EnrichedPlaybackProvider(provider: provider, context: enrichment)
             }
             try Task.checkCancellation()

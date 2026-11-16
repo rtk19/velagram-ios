@@ -752,6 +752,12 @@ final class AppEnvironment: ObservableObject {
         return (try? await tmdbClient.playbackContext(for: request, accessToken: token)) ?? PlaybackLookupContext(request: request)
     }
 
+    func tmdbPerson(id: Int) async throws -> TMDBPersonProfile {
+        let token = try tmdbAccessToken()
+        let language = Locale.preferredLanguages.first ?? "en-US"
+        return try await tmdbClient.person(id: id, accessToken: token, language: language)
+    }
+
     func tmdbDetails(for item: MediaItem) async throws -> MediaItem {
         let token = try tmdbAccessToken()
         let language = Locale.preferredLanguages.first ?? "en-US"
@@ -761,12 +767,15 @@ final class AppEnvironment: ObservableObject {
     func tmdbEpisodes(for season: MediaSeason, show: MediaItem) async throws -> [MediaEpisode] {
         let token = try tmdbAccessToken()
         let language = Locale.preferredLanguages.first ?? "en-US"
-        return try await tmdbClient.episodes(
+        let episodes = try await tmdbClient.episodes(
             for: season,
             show: show,
             accessToken: token,
             language: language
         )
+        library.reconcileEpisodes(episodes, in: show)
+        TelegramDownloads.shared.reconcileEpisodes(episodes, in: show)
+        return episodes
     }
 
     private func hasReachedExactReleaseTime(
@@ -808,6 +817,19 @@ final class AppEnvironment: ObservableObject {
         isRefreshingCompletedSeries = true
         defer { isRefreshingCompletedSeries = false }
 
+        let manualRequests = library.progress.filter { $0.episode?.isManuallyEntered == true }
+            .map { PlaybackRequest(media: $0.media, episode: $0.episode) }
+            + TelegramDownloads.shared.saved.compactMap { $0.catalogEpisode?.isManuallyEntered == true ? $0.request : nil }
+        var checked = Set<String>()
+        for request in manualRequests {
+            guard !Task.isCancelled else { return }
+            guard let episode = request.episode,
+                  checked.insert("\(request.media.artworkIdentityKey):\(episode.seasonNumber)").inserted else { continue }
+            if let show = try? await tmdbDetails(for: request.media),
+               let season = show.seasons.first(where: { $0.number == episode.seasonNumber }) {
+                _ = try? await tmdbEpisodes(for: season, show: show)
+            }
+        }
         await removeUnavailableQueuedEpisodes()
 
         for completedRequest in library.completedSeriesRequests {
@@ -864,6 +886,7 @@ final class AppEnvironment: ObservableObject {
         let queuedEpisodes = library.continueWatching.filter { $0.isNextUp }
         for progress in queuedEpisodes {
             guard !Task.isCancelled, let episode = progress.episode else { return }
+            if episode.isManuallyEntered == true { continue }
             do {
                 let show = try await tmdbDetails(for: progress.media)
                 guard let season = show.seasons.first(where: { $0.number == episode.seasonNumber }) else {

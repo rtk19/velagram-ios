@@ -129,6 +129,12 @@ struct CastMember: Identifiable, Codable, Hashable, Sendable {
     let id: String
     let name: String
     let imageURL: URL?
+    var character: String? = nil
+
+    var tmdbID: Int? {
+        guard id.hasPrefix("tmdb-person-") else { return nil }
+        return Int(id.dropFirst("tmdb-person-".count))
+    }
 }
 
 struct MediaSeason: Identifiable, Codable, Hashable, Sendable {
@@ -148,6 +154,17 @@ struct MediaEpisode: Identifiable, Codable, Hashable, Sendable {
     let overview: String?
     let posterURL: URL?
     let releaseDate: String?
+    var isManuallyEntered: Bool? = nil
+
+    static func manual(show: MediaItem, season: Int, episode: Int) -> MediaEpisode {
+        var value = MediaEpisode(
+            id: "\(show.id)/tmdb-s\(season)e\(episode)",
+            providerID: show.providerID, showID: show.id, seasonNumber: season, number: episode,
+            title: nil, overview: nil, posterURL: show.backdropURL
+        )
+        value.isManuallyEntered = true
+        return value
+    }
 
     init(
         id: String,

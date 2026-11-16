@@ -3,14 +3,31 @@ import AVKit
 import MediaPlayer
 import VLCKit
 
+/// VLC's synchronous stop can wait for its video output to finish work on the
+/// main thread. Retain the player and drawable until that work has completed.
+final class VLCPlayerRetirement: @unchecked Sendable {
+    let player: VLCMediaPlayer
+    init(_ player: VLCMediaPlayer) { self.player = player }
+    func stop() async {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                self.player.stop()
+                continuation.resume()
+            }
+        }
+    }
+}
+
 struct TelegramNativePlayerController: UIViewControllerRepresentable {
     let session: TelegramPlayerSession
     let onDoubleTap: (CGFloat) -> Void
     let onHold: (Bool) -> Void
     let onTap: () -> Void
+    var onControlsVisibilityChange: ((Bool) -> Void)? = nil
     func makeCoordinator() -> PlayerGestureCoordinator { PlayerGestureCoordinator() }
     func makeUIViewController(context: Context) -> AVPlayerViewController {
-        let controller = AVPlayerViewController(); controller.player = session.nativePlayer
+        let controller = PlayerControlsTrackingController(); controller.player = session.nativePlayer
+        controller.onControlsVisibilityChange = onControlsVisibilityChange
         controller.showsPlaybackControls = true; controller.allowsPictureInPicturePlayback = true
         controller.canStartPictureInPictureAutomaticallyFromInline = true
         controller.updatesNowPlayingInfoCenter = false
@@ -28,7 +45,7 @@ struct TelegramNativePlayerController: UIViewControllerRepresentable {
         context.coordinator.onDoubleTap = onDoubleTap; context.coordinator.onHold = onHold
         context.coordinator.onZoom = { session.fitToFill = $0 }
     }
-    static func dismantleUIViewController(_ controller: AVPlayerViewController, coordinator: PlayerGestureCoordinator) { coordinator.remove(); controller.player = nil }
+    static func dismantleUIViewController(_ controller: AVPlayerViewController, coordinator: PlayerGestureCoordinator) { coordinator.remove(); (controller as? PlayerControlsTrackingController)?.stopVisibilityTracking(); controller.player = nil }
 }
 struct PlayerAirPlayButton: UIViewRepresentable {
     var video = true

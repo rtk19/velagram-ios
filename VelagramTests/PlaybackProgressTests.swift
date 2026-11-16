@@ -754,6 +754,27 @@ struct PlaybackProgressTests {
         #expect(LibraryStore(directory: directory).subtitleSyncVersions(for: firstEpisode).map(\.id) == [older.id])
     }
 
+    @Test("Manual episode metadata reconciles without losing resume position or current selection")
+    @MainActor
+    func manualEpisodeReconciliation() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let library = LibraryStore(directory: directory)
+        let show = MediaItem(id: "manual-show", providerID: "tmdb", kind: .series, title: "Show")
+        let manual = MediaEpisode.manual(show: show, season: 0, episode: 3)
+        let request = PlaybackRequest(media: show, episode: manual)
+        library.updateProgress(request: request, position: 123, duration: 1800)
+        let official = MediaEpisode(id: manual.id, providerID: show.providerID, showID: show.id,
+                                    seasonNumber: 0, number: 3, title: "Special", overview: "Details", posterURL: nil)
+        library.reconcileEpisodes([official], in: show)
+        #expect(library.continueWatching.count == 1)
+        #expect(library.latestProgress(for: show)?.position == 123)
+        #expect(library.latestProgress(for: show)?.episode?.title == "Special")
+        #expect(library.latestProgress(for: show)?.episode?.isManuallyEntered != true)
+        let restored = LibraryStore(directory: directory)
+        #expect(restored.latestProgress(for: show)?.episode == official)
+    }
+
     private func request(seasonNumber: Int = 1, episodeNumber: Int) -> PlaybackRequest {
         request(
             showID: "show",

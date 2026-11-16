@@ -8,12 +8,78 @@ import VLCKit
 private final class PlayerFixtureBundle: NSObject {}
 @Suite(.serialized)
 struct PlayerSessionIntegrationTests {
+    @MainActor @Test(.enabled(if: ProcessInfo.processInfo.environment["VELAGRAM_LIVE_STREAMS"] == "1"))
+    func actualDeviceCatchupSeeksAcrossArchive() async throws {
+        // Explicitly opt in: uses the signed app's existing account on the phone.
+        // Credentials and archive URLs stay on-device and out of test output.
+        let store = VelagramStore.shared
+        let channels = store.liveChannels.filter { $0.supportsCatchup }
+        let channel = try #require(channels.first(where: { $0.name.contains("ספורט 5") }) ?? channels.first)
+        let program = try #require(store.schedule(channel).last(where: {
+            $0.end < .now && $0.end.timeIntervalSince($0.start) > 7200 && store.catchup(channel, program: $0) != nil
+        }))
+        let replay = try #require(store.catchup(channel, program: program))
+        let media = TelegramMedia(chatID: 0, messageID: 0, fileID: nil, name: "archive.ts", caption: "", date: .now,
+            size: 0, duration: Int(program.end.timeIntervalSince(program.start)), mimeType: "video/ts", thumbnailFileID: nil, kind: .video, remoteURL: replay.url)
+        let session = TelegramPlayerSession(media: media, store: TelegramStore(transport: TelegramFixtureTransport()), queue: [], rememberPlayback: false)
+        session.catchup = replay; session.resumePlayback = false; session.sourceHeaders = replay.headers
+        let surface = UIView(frame: CGRect(x: 0, y: 0, width: 640, height: 360))
+        session.player.drawable = surface
+        let task = Task { await session.start() }
+        defer { task.cancel(); session.stop() }
+        for _ in 0..<200 where session.opening || session.position < 1 { try await Task.sleep(for: .milliseconds(100)) }
+        #expect(session.failure == nil)
+        #expect(session.player.isPlaying)
+        for target in [4198.0, 1800.0, 1815.0] {
+            session.seek(target)
+            session.player.drawable = surface
+            for _ in 0..<300 where session.opening { try await Task.sleep(for: .milliseconds(100)) }
+            #expect(!session.opening)
+            #expect(session.failure == nil)
+            let frames = session.player.media?.statistics.decodedVideo ?? 0
+            try await Task.sleep(for: .seconds(5))
+            #expect(session.position >= target && session.position < target + 25)
+            #expect((session.player.media?.statistics.decodedVideo ?? 0) > frames)
+            #expect(session.player.isPlaying)
+        }
+        session.pause(); session.seek(900)
+        session.player.drawable = surface
+        for _ in 0..<300 where session.opening { try await Task.sleep(for: .milliseconds(100)) }
+        try await Task.sleep(for: .seconds(1))
+        #expect(session.userPaused)
+        #expect(!session.player.isPlaying)
+        #expect(session.position >= 900 && session.position < 905)
+        session.play()
+        session.seek(2400); session.seek(3600)
+        session.player.drawable = surface
+        for _ in 0..<300 where session.opening { try await Task.sleep(for: .milliseconds(100)) }
+        try await Task.sleep(for: .seconds(5))
+        #expect(session.position >= 3600 && session.position < 3625)
+        #expect(session.player.isPlaying)
+        #expect(session.duration == program.end.timeIntervalSince(program.start))
+    }
     @MainActor private func session(container: String) throws -> TelegramPlayerSession {
         let name = container == "mp4" ? "TelegramNativePlayback" : "TelegramInteraction"
         let url = try #require(Bundle(for: PlayerFixtureBundle.self).url(forResource: name, withExtension: container))
         let media = TelegramMedia(chatID: -42, messageID: -42, fileID: nil, name: url.lastPathComponent, caption: "", date: .now,
             size: 0, duration: container == "mp4" ? 4 : 30, mimeType: "video/\(container)", thumbnailFileID: nil, kind: .video, remoteURL: url)
         return TelegramPlayerSession(media: media, store: TelegramStore(transport: TelegramFixtureTransport()), queue: [], rememberPlayback: false)
+    }
+    @MainActor @Test func catchupUsesProgramTimelineAndEndsAtItsBoundary() async throws {
+        let session = try session(container: "mp4")
+        let start = Date.now.addingTimeInterval(-3600)
+        let program = GuideProgram(channelID: "fixture", title: "Replay", summary: "", start: start, end: start.addingTimeInterval(2))
+        var replay = LiveChannel(id: "fixture-replay", name: "Replay", url: try #require(session.current.remoteURL), group: "Tests")
+        replay.catchupContext = CatchupContext(channelID: "fixture-channel", program: program)
+        session.catchup = replay
+        session.resumePlayback = false
+        #expect(session.progressID == "iptv:fixture-replay")
+        let task = Task { await session.start() }
+        defer { task.cancel(); session.stop() }
+        for _ in 0..<80 where !session.playbackEnded { try await Task.sleep(for: .milliseconds(100)) }
+        #expect(session.duration == 2)
+        #expect(session.playbackEnded)
+        #expect(session.position <= 2)
     }
     @MainActor @Test func nativeEnginePlaysWithSystemTracksAndRestoresTemporarySpeed() async throws {
         let session = try session(container: "mp4")

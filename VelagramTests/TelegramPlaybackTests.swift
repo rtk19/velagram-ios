@@ -223,3 +223,29 @@ struct MatroskaCaptionCacheTests {
         #expect(cues.allSatisfy { !$0.text.contains("{\\") && !$0.text.contains("Default,") })
     }
 }
+
+struct PlaybackRoutingTests {
+    private func media(name: String, mime: String = "", url: String? = nil) -> TelegramMedia {
+        TelegramMedia(chatID: 0, messageID: 1, fileID: nil, name: name, caption: "", date: .now,
+                      size: 0, duration: 0, mimeType: mime, thumbnailFileID: nil, kind: .video,
+                      remoteURL: url.flatMap(URL.init(string:)))
+    }
+
+    @Test func nativeRoutingRecognizesURLAndMIME() {
+        #expect(TelegramPlayerSession.prefersNative(media(name: "Episode", url: "https://example.com/movie.MP4?token=1")))
+        #expect(TelegramPlayerSession.prefersNative(media(name: "Episode", mime: "Video/MP4; codecs=avc1")))
+        #expect(TelegramPlayerSession.prefersNative(media(name: "movie.MP4")))
+        #expect(!TelegramPlayerSession.prefersNative(media(name: "movie.mkv", mime: "video/mp4")))
+        #expect(!TelegramPlayerSession.prefersNative(media(name: "Episode", url: "https://example.com/movie.webm")))
+    }
+
+    @Test func externalPlayerURLsPreserveSignedQuery() throws {
+        let source = try #require(URL(string: "https://example.com/movie.mp4?token=a%2Bb&name=two%20words#chapter"))
+        for player in ExternalVideoPlayer.allCases {
+            let url = try #require(player.playURL(source))
+            let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+            #expect(components.queryItems?.first(where: { $0.name == "url" })?.value == source.absoluteString)
+            #expect(player.playURL(URL(fileURLWithPath: "/private/movie.mp4")) == nil)
+        }
+    }
+}

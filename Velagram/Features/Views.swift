@@ -229,6 +229,13 @@ private struct TitleNavigationTransitionModifier: ViewModifier {
     }
 }
 
+extension View {
+    func velagramSurface(cornerRadius: CGFloat = 16) -> some View {
+        modifier(VelagramSurfaceModifier(cornerRadius: cornerRadius))
+    }
+
+}
+
 private extension View {
     func titleTransitionSource(id: String, sourceID: String? = nil) -> some View {
         modifier(TitleTransitionSourceModifier(id: id, explicitSourceID: sourceID))
@@ -236,10 +243,6 @@ private extension View {
 
     func titleNavigationTransition(id: String) -> some View {
         modifier(TitleNavigationTransitionModifier(id: id))
-    }
-
-    func velagramSurface(cornerRadius: CGFloat = 16) -> some View {
-        modifier(VelagramSurfaceModifier(cornerRadius: cornerRadius))
     }
 
     /// Continues the hero's black endpoint below its fixed frame, then reveals
@@ -344,7 +347,7 @@ private struct TMDBTitlePosterActions: View {
 }
 
 struct RootView: View {
-    private enum Tab: Hashable { case home, movies, series, search, settings }
+    private enum Tab: Hashable { case home, library, live, search, settings }
 
     @EnvironmentObject private var environment: AppEnvironment
     @Environment(\.scenePhase) private var scenePhase
@@ -383,16 +386,16 @@ struct RootView: View {
                     .environment(\.titleTransitionSelection, homeTitleTransitionSelection)
                     .tabItem { Label("Home", systemImage: "house.fill") }
                     .tag(Tab.home)
-                NavigationStack { CatalogView(kind: .movie) }
+                NavigationStack { CatalogLibraryView() }
                     .environment(\.titleTransitionNamespace, movieTitleTransitionNamespace)
                     .environment(\.titleTransitionSelection, movieTitleTransitionSelection)
-                    .tabItem { Label("Movies", systemImage: "film.fill") }
-                    .tag(Tab.movies)
+                    .tabItem { Label("Library", systemImage: "books.vertical.fill") }
+                    .tag(Tab.library)
                 NavigationStack { LiveView() }
                     .environment(\.titleTransitionNamespace, seriesTitleTransitionNamespace)
                     .environment(\.titleTransitionSelection, seriesTitleTransitionSelection)
                     .tabItem { Label("Live", systemImage: "dot.radiowaves.left.and.right") }
-                    .tag(Tab.series)
+                    .tag(Tab.live)
                 NavigationStack {
                     SearchView(
                         isSearchPresented: $searchIsPresented,
@@ -585,6 +588,7 @@ struct HomeView: View {
     @State private var selectedDetails: ResolvedMediaItem?
     @State private var playback: PlaybackRequest?
     @State private var preparedPlayback: PreparedPlayback?
+    @State private var isHeaderVisible = true
 
     init(onInitialLoadCompleted: @escaping () -> Void = {}) {
         self.onInitialLoadCompleted = onInitialLoadCompleted
@@ -605,7 +609,7 @@ struct HomeView: View {
                 } else if model.isTrendingLoading {
                     TrendingHeroLoadingView()
                 } else if let message = model.trendingMessage {
-                    TrendingHeroUnavailableView(message: message)
+                    TrendingHeroUnavailableView(message: message).padding(.top, 140)
                 }
                 if !library.continueWatching.isEmpty {
                     ContinueWatchingShelfView(
@@ -657,6 +661,11 @@ struct HomeView: View {
         .ignoresSafeArea(edges: .top)
         .modifier(HeroViewportModifier())
         .toolbar(.hidden, for: .navigationBar)
+        .modifier(ScrollHeaderVisibilityModifier(isVisible: $isHeaderVisible))
+        .overlay(alignment: .top) {
+            PageTitleOverlay(title: "Home")
+                .modifier(ScrollHeaderAppearanceModifier(isVisible: isHeaderVisible))
+        }
         .task {
             await model.loadTrending(environment: environment)
             onInitialLoadCompleted()
@@ -688,7 +697,7 @@ struct HomeView: View {
         .navigationDestination(item: $selectedDetails) {
             DetailsView(item: $0.media, tmdbMetadata: $0.tmdbMetadata)
         }
-        .fullScreenCover(isPresented: Binding(
+        .navigationDestination(isPresented: Binding(
             get: { playback != nil },
             set: {
                 if !$0 {
@@ -833,8 +842,6 @@ private struct TrendingHeroCarousel: View {
                 )
                 .padding(.bottom, 18)
 
-                PageTitleOverlay(title: "Home")
-                    .offset(y: metrics.verticalOffset)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
@@ -1219,10 +1226,57 @@ private struct TrendingHeroLoadingView: View {
                 .tint(.white)
                 .foregroundStyle(.white.opacity(0.72))
                 .padding(.bottom, 54)
-            PageTitleOverlay(title: "Home")
         }
         .containerRelativeFrame(.horizontal, alignment: .center)
         .modifier(HeroHeightModifier())
+    }
+}
+
+// Clamp offsets to the scrollable range so edge bounce cannot toggle the header.
+private struct ScrollHeaderVisibilityModifier: ViewModifier {
+    @Binding var isVisible: Bool
+    @State private var directionAnchor: CGFloat = 0
+    @State private var previousOffset: CGFloat = 0
+    @State private var wasScrollingUp = false
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18, *) {
+            content.onScrollGeometryChange(for: CGFloat.self) { geometry in
+                let maximum = max(0, geometry.contentSize.height + geometry.contentInsets.top
+                                  + geometry.contentInsets.bottom - geometry.containerSize.height)
+                return min(maximum, max(0, geometry.contentOffset.y + geometry.contentInsets.top))
+            } action: { _, offset in
+                let scrollingUp = offset > previousOffset
+                if scrollingUp != wasScrollingUp {
+                    directionAnchor = previousOffset
+                }
+                if offset <= 8 {
+                    isVisible = true
+                    directionAnchor = offset
+                } else if abs(offset - directionAnchor) > 14 {
+                    isVisible = !scrollingUp
+                    directionAnchor = offset
+                }
+                previousOffset = offset
+                wasScrollingUp = scrollingUp
+            }
+        } else {
+            content
+        }
+    }
+}
+
+private struct ScrollHeaderAppearanceModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let isVisible: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(isVisible ? 1 : 0)
+            .offset(y: isVisible || reduceMotion ? 0 : -160)
+            .allowsHitTesting(isVisible)
+            .accessibilityHidden(!isVisible)
+            .animation(reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.25), value: isVisible)
     }
 }
 
@@ -1233,10 +1287,8 @@ private struct PageTitleOverlay: View {
         VStack {
             PageTitleText(title: title)
                 .padding(.top, 58)
-            Spacer()
+            Spacer().allowsHitTesting(false)
         }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 }
 
@@ -1260,6 +1312,12 @@ private struct PageTitleText: View {
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.5), radius: 12, y: 3)
             Spacer()
+            if title == "Home" {
+                NavigationLink { DownloadsView() } label: {
+                    Image(systemName: "arrow.down.circle").font(.title2).foregroundStyle(.white)
+                        .frame(width: 44, height: 44).background(.black.opacity(0.35), in: Circle())
+                }.accessibilityLabel("Downloads").accessibilityIdentifier("home.downloads")
+            }
         }
         .padding(.horizontal, 20)
     }
@@ -1695,28 +1753,7 @@ private struct ContinueWatchingRow: View {
     var body: some View {
         HStack(spacing: 10) {
             Button { onResume(progress) } label: {
-                HStack(spacing: 14) {
-                    ContinueWatchingRowArtwork(progress: progress)
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(progress.media.title)
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                        if let episodeTitle = progress.episodeDisplayTitle {
-                            Text(episodeTitle)
-                                .font(.subheadline)
-                                .foregroundStyle(.white.opacity(0.78))
-                                .lineLimit(1)
-                        }
-                        Text(progress.shelfProgressLabel)
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.white.opacity(0.58))
-                            .lineLimit(1)
-                    }
-
-                    Spacer(minLength: 0)
-                }
+                ContinueWatchingRowContent(progress: progress)
                 .contentShape(Rectangle())
                 .contextMenu {
                     ContinueWatchingActions(
@@ -1767,12 +1804,38 @@ private struct ContinueWatchingRow: View {
     }
 }
 
+/// Shared presentation for Home Continue Watching and the offline navigator.
+struct ContinueWatchingRowContent: View {
+    let progress: WatchProgress
+    var localArtworkURL: URL? = nil
+    var detail: String? = nil
+    var body: some View {
+        HStack(spacing: 14) {
+            ContinueWatchingRowArtwork(progress: progress, localArtworkURL: localArtworkURL)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(progress.media.title).font(.body.weight(.semibold)).foregroundStyle(.white).lineLimit(1)
+                if let episodeTitle = progress.episodeDisplayTitle {
+                    Text(episodeTitle).font(.subheadline).foregroundStyle(.white.opacity(0.78)).lineLimit(1)
+                }
+                Text(progress.shelfProgressLabel).font(.caption.weight(.medium)).foregroundStyle(.white.opacity(0.58)).lineLimit(1)
+                if let detail { Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+}
+
 private struct ContinueWatchingRowArtwork: View {
     @EnvironmentObject private var environment: AppEnvironment
     let progress: WatchProgress
+    var localArtworkURL: URL? = nil
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
+            Group {
+            if let localArtworkURL, let image = UIImage(contentsOfFile: localArtworkURL.path) {
+                Image(uiImage: image).resizable().scaledToFill()
+            } else {
             CachedRemoteImage(url: progress.continueWatchingArtworkURL) { image in
                 image.resizable().scaledToFill()
             } placeholder: {
@@ -1781,6 +1844,8 @@ private struct ContinueWatchingRowArtwork: View {
                     .overlay {
                         Image(systemName: progress.media.kind == .movie ? "film" : "tv")
                     }
+            }
+            }
             }
             .frame(width: 128, height: 74)
             .clipped()
@@ -2196,7 +2261,7 @@ private struct PosterGridCard: View {
     }
 }
 
-private struct CachedRemoteImage<Content: View, Placeholder: View>: View {
+struct CachedRemoteImage<Content: View, Placeholder: View>: View {
     @EnvironmentObject private var environment: AppEnvironment
     let url: URL?
     private let content: (Image) -> Content
@@ -2527,15 +2592,120 @@ private struct TMDBCollectionGridView: View {
     }
 }
 
+struct CatalogLibraryView: View {
+    @EnvironmentObject private var environment: AppEnvironment
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Namespace private var selectionNamespace
+    @State private var selectedKind: MediaKind = .movie
+    @State private var isHeaderVisible = true
+    @State private var headerHeight: CGFloat = 200
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            ZStack {
+                catalogPage(.movie)
+                catalogPage(.series)
+            }
+            .clipped()
+
+            libraryHeader
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { headerHeight = $0 }
+                .modifier(ScrollHeaderAppearanceModifier(isVisible: isHeaderVisible))
+        }
+        .background { VelagramScreenBackground() }
+        .ignoresSafeArea(edges: .top)
+        .toolbar(.hidden, for: .navigationBar)
+        .onChange(of: selectedKind) { _, _ in isHeaderVisible = true }
+    }
+
+    private var libraryHeader: some View {
+        VStack(spacing: 16) {
+            PageTitleHeader(title: "Library")
+            catalogPicker
+                .padding(.horizontal, 20)
+                .accessibilityIdentifier("library.catalogPicker")
+        }
+        .padding(.bottom, 16)
+    }
+
+    private var pickerButtons: some View {
+        HStack(spacing: 4) {
+            catalogButton("Movies", symbol: "film.fill", kind: .movie)
+            catalogButton("Series", symbol: "tv.fill", kind: .series)
+        }
+        .padding(5)
+    }
+
+    @ViewBuilder private var catalogPicker: some View {
+        if reduceTransparency {
+            pickerButtons.background(VelagramTheme.surface, in: Capsule())
+        } else if #available(iOS 26, *) {
+            GlassEffectContainer(spacing: 4) {
+                pickerButtons.glassEffect(.regular.interactive(), in: .capsule)
+            }
+        } else {
+            pickerButtons.background(.ultraThinMaterial, in: Capsule())
+        }
+    }
+
+    private func catalogPage(_ kind: MediaKind) -> some View {
+        CatalogView(kind: kind, showsHeader: false, topContentInset: headerHeight)
+            .modifier(ScrollHeaderVisibilityModifier(isVisible: $isHeaderVisible))
+            .opacity(selectedKind == kind ? 1 : 0)
+            .allowsHitTesting(selectedKind == kind)
+            .accessibilityHidden(selectedKind != kind)
+    }
+
+    private func catalogButton(_ title: String, symbol: String, kind: MediaKind) -> some View {
+        Button {
+            guard selectedKind != kind else { return }
+            withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.35)) {
+                selectedKind = kind
+            }
+        } label: {
+            Label(title, systemImage: symbol)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(selectedKind == kind ? .white : .white.opacity(0.65))
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 44)
+                .contentShape(Capsule())
+                .background {
+                    if selectedKind == kind {
+                        selectionHighlight
+                            .matchedGeometryEffect(id: "library.selection", in: selectionNamespace)
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selectedKind == kind ? .isSelected : [])
+    }
+
+    @ViewBuilder private var selectionHighlight: some View {
+        if reduceTransparency {
+            Capsule().fill(environment.theme.accent)
+        } else if #available(iOS 26, *) {
+            Capsule().fill(environment.theme.accent.opacity(0.3))
+        } else {
+            Capsule().fill(.thinMaterial)
+                .overlay { Capsule().strokeBorder(.white.opacity(0.18), lineWidth: 1) }
+        }
+    }
+}
+
 struct CatalogView: View {
     @EnvironmentObject private var environment: AppEnvironment
     @EnvironmentObject private var sourceLookup: SourceLookupCoordinator
     @StateObject private var model: TMDBCollectionsViewModel
     @State private var selectedDetails: ResolvedMediaItem?
     let kind: MediaKind
+    private let showsHeader: Bool
+    private let topContentInset: CGFloat
 
-    init(kind: MediaKind) {
+    init(kind: MediaKind, showsHeader: Bool = true, topContentInset: CGFloat = 0) {
         self.kind = kind
+        self.showsHeader = showsHeader
+        self.topContentInset = topContentInset
         _model = StateObject(wrappedValue: TMDBCollectionsViewModel(
             collections: TMDBCollection.catalogSections(for: kind)
         ))
@@ -2544,7 +2714,9 @@ struct CatalogView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 26) {
-                PageTitleHeader(title: kind == .movie ? "Movies" : "Series")
+                if showsHeader {
+                    PageTitleHeader(title: kind == .movie ? "Movies" : "Series")
+                }
                 ForEach(model.collections) { collection in
                     if let titles = model.titles[collection], !titles.isEmpty {
                         TMDBShelfView(
@@ -2556,10 +2728,11 @@ struct CatalogView: View {
                     }
                 }
             }
+            .padding(.top, topContentInset)
             .padding(.bottom)
         }
         .background { VelagramScreenBackground() }
-        .ignoresSafeArea(edges: .top)
+        .ignoresSafeArea(edges: showsHeader ? .top : [])
         .toolbar(.hidden, for: .navigationBar)
         .overlay { if model.isLoading && model.titles.isEmpty { ProgressView("Loading TMDB…") } }
         .navigationDestination(item: $selectedDetails) {
@@ -2722,6 +2895,9 @@ struct DetailsView: View {
     @EnvironmentObject private var sourceLookup: SourceLookupCoordinator
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var model: DetailsViewModel
+    @State private var showsManualEpisode = false
+    @State private var manualSeason = "1"
+    @State private var manualEpisode = "1"
     @State private var selectedSeasonNumber: Int?
     @State private var playback: PlaybackRequest?
     @State private var preparedPlayback: PreparedPlayback?
@@ -2779,10 +2955,10 @@ struct DetailsView: View {
                         )
                     }
 
-                    if !model.item.seasons.isEmpty { seasonsSection }
+                    if model.item.kind == .series { seasonsSection }
                     if !model.item.cast.isEmpty {
                         Text("Cast").font(.title2.bold())
-                        Text(model.item.cast.map(\.name).joined(separator: " · ")).foregroundStyle(.secondary)
+                        CastShelf(members: model.item.cast)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -2810,6 +2986,62 @@ struct DetailsView: View {
                 )
                 .transition(.opacity.combined(with: .scale(scale: 0.97)))
             }
+        }
+        .sheet(isPresented: $showsManualEpisode) {
+            NavigationStack {
+                Form {
+                    Section {
+                        HStack {
+                            Text("Season:")
+                            TextField("Season number", text: $manualSeason)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.leading)
+                                .accessibilityLabel("Season number")
+                        }
+                        HStack {
+                            Text("Episode:")
+                            TextField("Episode number", text: $manualEpisode)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.leading)
+                                .accessibilityLabel("Episode number")
+                        }
+                    } header: {
+                        Text("Episode numbers")
+                    } footer: {
+                        Text("Use season 0 for specials. Enter the numbers used by your source. Available sources may use different numbering.")
+                    }
+                    Section {
+                        Label("Find sources", systemImage: "magnifyingglass")
+                        Text("This episode uses the usual scanner, playback and downloads. Series artwork appears until episode details are available, then metadata syncs automatically.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                .navigationTitle("Enter episode manually")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button { showsManualEpisode = false } label: {
+                            Image(systemName: "xmark")
+                        }
+                        .accessibilityLabel("Close")
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Find sources") {
+                            guard let season = Int(manualSeason), let number = Int(manualEpisode),
+                                  season >= 0, number > 0 else { return }
+                            let known = model.episodes.values.flatMap { $0 }.first {
+                                $0.seasonNumber == season && $0.number == number
+                            }
+                            let episode = known ?? MediaEpisode.manual(show: model.item, season: season, episode: number)
+                            showsManualEpisode = false
+                            Task { await beginPlayback(PlaybackRequest(media: model.item, episode: episode)) }
+                        }
+                        .disabled(!manualEpisodeIsValid)
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
         .animation(.easeInOut(duration: 0.2), value: episodeInfo?.id)
         .task {
@@ -2898,7 +3130,7 @@ struct DetailsView: View {
                 configuration: nil
             )
         }
-        .fullScreenCover(isPresented: Binding(get: { playback != nil }, set: {
+        .navigationDestination(isPresented: Binding(get: { playback != nil }, set: {
             if !$0 {
                 playback = nil
                 preparedPlayback = nil
@@ -3034,8 +3266,26 @@ struct DetailsView: View {
         .minimumScaleFactor(0.75)
     }
 
+    private var manualEpisodeIsValid: Bool {
+        guard let season = Int(manualSeason), let episode = Int(manualEpisode) else { return false }
+        return (0...999).contains(season) && (1...9999).contains(episode)
+    }
+
+    private func enterManualEpisode() {
+        manualSeason = String(selectedSeasonNumber ?? 1)
+        manualEpisode = "1"
+        showsManualEpisode = true
+    }
+
     private var seasonsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
+            Button(action: enterManualEpisode) {
+                Label("Enter episode manually", systemImage: "number")
+                    .font(.subheadline.weight(.medium))
+            }
+            ForEach(manualEpisodesWithoutCatalogEntry) { episode in
+                episodeCard(episode)
+            }
             if let firstSeason = model.orderedSeasons.first {
                 Picker("Season", selection: Binding(get: { selectedSeasonNumber ?? firstSeason.number }, set: { seasonNumber in
                     selectedSeasonNumber = seasonNumber
@@ -3045,104 +3295,119 @@ struct DetailsView: View {
                     ForEach(model.orderedSeasons) { Text($0.title ?? "Season \($0.number)").tag($0.number) }
                 }
                 .pickerStyle(.menu)
-
-                let season = model.item.seasons.first {
-                    $0.number == selectedSeasonNumber
-                } ?? firstSeason
+            }
+            if let season = model.item.seasons.first(where: { $0.number == selectedSeasonNumber }) ?? model.orderedSeasons.first {
                 ForEach(model.episodes[season.id] ?? []) { episode in
-                    let episodeProgress = library.progress(for: episode, in: model.item)
-                    let isWatched = library.isWatched(episode, in: model.item)
-                    Button {
-                        Task { await beginPlayback(PlaybackRequest(media: model.item, episode: episode)) }
-                    } label: {
-                        HStack(spacing: 12) {
-                            ZStack(alignment: .bottom) {
-                                CachedRemoteImage(url: episode.posterURL) { image in
-                                    image.resizable().scaledToFill()
-                                } placeholder: {
-                                    Rectangle().fill(.gray.opacity(0.2))
-                                }
-                                .frame(width: 120, height: 68)
-                                .clipped()
+                    episodeCard(episode)
+                }
+            }
+        }
+    }
 
-                                if let episodeProgress {
-                                    ProgressView(value: episodeProgress.fraction)
-                                        .tint(environment.theme.accent)
-                                        .background(.white.opacity(0.28))
-                                }
+    private var manualEpisodesWithoutCatalogEntry: [MediaEpisode] {
+        let catalogEpisodes = model.episodes.values.flatMap { $0 }
+        return library.progress.filter {
+            $0.media.artworkIdentityKey == model.item.artworkIdentityKey
+        }.compactMap(\.episode).filter { episode in
+            episode.isManuallyEntered == true && !catalogEpisodes.contains {
+                $0.seasonNumber == episode.seasonNumber && $0.number == episode.number
+            }
+        }.sorted { ($0.seasonNumber, $0.number) < ($1.seasonNumber, $1.number) }
+    }
 
-                                if isWatched {
-                                    VStack {
-                                        HStack {
-                                            Spacer()
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .font(.title3)
-                                                .foregroundStyle(.white, .green)
-                                                .padding(6)
-                                                .background(.black.opacity(0.68), in: Circle())
-                                        }
-                                        Spacer()
-                                    }
-                                    .padding(4)
-                                }
-                            }
-                            .frame(width: 120, height: 68)
-                            .clipShape(RoundedRectangle(cornerRadius: 7))
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("E\(episode.number) · \(episode.title ?? "Episode")").font(.headline)
-                                if let releaseDate = episode.formattedReleaseDate {
-                                    Text(releaseDate)
-                                        .font(.caption.weight(.medium))
-                                        .foregroundStyle(.secondary)
-                                }
-                                if let overview = episode.overview { Text(overview).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
-                            }
-                            Spacer(); Image(systemName: "play.circle.fill").font(.title2)
-                        }
-                        .padding(10)
-                        .velagramSurface(cornerRadius: 14)
-                        .contentShape(Rectangle())
+    private func episodeCard(_ episode: MediaEpisode) -> some View {
+        let episodeProgress = library.progress(for: episode, in: model.item)
+        let isWatched = library.isWatched(episode, in: model.item)
+        let isDownloaded = TelegramDownloads.shared.available(for: PlaybackRequest(media: model.item, episode: episode)).contains { !$0.isCached }
+        return Button {
+            Task { await beginPlayback(PlaybackRequest(media: model.item, episode: episode)) }
+        } label: {
+            HStack(spacing: 12) {
+                ZStack(alignment: .bottom) {
+                    CachedRemoteImage(url: episode.posterURL ?? episodeProgress?.continueWatchingArtworkURL ?? model.item.backdropURL ?? model.item.posterURL) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        Rectangle().fill(.gray.opacity(0.2))
                     }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button {
-                            Task { await beginPlayback(PlaybackRequest(media: model.item, episode: episode)) }
-                        } label: {
-                            Label(episodeProgress?.resumeLabel == nil ? "Play" : "Resume", systemImage: "play.fill")
-                        }
+                    .frame(width: 120, height: 68)
+                    .clipped()
 
-                        Button {
-                            let request = PlaybackRequest(media: model.item, episode: episode)
-                            if isWatched {
-                                library.markUnwatched(request: request)
-                            } else {
-                                markEpisodeAsWatched(request)
+                    if let episodeProgress {
+                        ProgressView(value: episodeProgress.fraction)
+                            .tint(environment.theme.accent)
+                            .background(.white.opacity(0.28))
+                    }
+
+                    if isWatched {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.white, .green)
+                                    .padding(6)
+                                    .background(.black.opacity(0.68), in: Circle())
                             }
-                        } label: {
-                            Label(
-                                isWatched ? "Mark as Unwatched" : "Mark as Watched",
-                                systemImage: isWatched ? "circle" : "checkmark.circle"
-                            )
+                            Spacer()
                         }
-
-                        if hasPreviousEpisodes(before: episode) {
-                            Button {
-                                markPreviousEpisodesAsWatched(before: episode)
-                            } label: {
-                                Label(
-                                    "Mark Previous Episodes as Watched",
-                                    systemImage: "checkmark.rectangle.stack.fill"
-                                )
-                            }
-                        }
-
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.2)) { episodeInfo = episode }
-                        } label: {
-                            Label("Show Episode Info", systemImage: "info.circle")
-                        }
+                        .padding(4)
                     }
                 }
+                .frame(width: 120, height: 68)
+                .clipShape(RoundedRectangle(cornerRadius: 7))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("E\(episode.number) · \(episode.title ?? "Episode")").font(.headline)
+                    if let releaseDate = episode.formattedReleaseDate {
+                        Text(releaseDate)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    if isDownloaded { Label("Downloaded", systemImage: "arrow.down.circle.fill").font(.caption.weight(.medium)).foregroundStyle(environment.theme.accent) }
+                    if let overview = episode.overview { Text(overview).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
+                }
+                Spacer(); Image(systemName: "play.circle.fill").font(.title2)
+            }
+            .padding(10)
+            .velagramSurface(cornerRadius: 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button {
+                Task { await beginPlayback(PlaybackRequest(media: model.item, episode: episode)) }
+            } label: {
+                Label(episodeProgress?.resumeLabel == nil ? "Play" : "Resume", systemImage: "play.fill")
+            }
+
+            Button {
+                let request = PlaybackRequest(media: model.item, episode: episode)
+                if isWatched {
+                    library.markUnwatched(request: request)
+                } else {
+                    markEpisodeAsWatched(request)
+                }
+            } label: {
+                Label(
+                    isWatched ? "Mark as Unwatched" : "Mark as Watched",
+                    systemImage: isWatched ? "circle" : "checkmark.circle"
+                )
+            }
+
+            if hasPreviousEpisodes(before: episode) {
+                Button {
+                    markPreviousEpisodesAsWatched(before: episode)
+                } label: {
+                    Label(
+                        "Mark Previous Episodes as Watched",
+                        systemImage: "checkmark.rectangle.stack.fill"
+                    )
+                }
+            }
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { episodeInfo = episode }
+            } label: {
+                Label("Show Episode Info", systemImage: "info.circle")
             }
         }
     }
@@ -3174,6 +3439,11 @@ struct DetailsView: View {
                )
            }) {
             return PlaybackRequest(media: model.item, episode: episode)
+        }
+
+        if let progress = library.latestProgress(for: model.item),
+           progress.episode?.isManuallyEntered == true {
+            return PlaybackRequest(media: model.item, episode: progress.episode)
         }
 
         guard let season = model.item.seasons.first(where: {
@@ -3510,6 +3780,9 @@ struct SettingsView: View {
             PageTitleHeader(title: "Settings")
 
             Form {
+                Section("IPTV") {
+                    NavigationLink { HiddenIPTVSourcesView() } label: { Label("Hidden IPTV sources", systemImage: "eye.slash") }
+                }
                 Section("Source scanning") {
                     Picker("Search language priority", selection: $telegramSearchLanguage) {
                         ForEach(TelegramSearchLanguage.allCases) { language in Text(language.title).tag(language.rawValue) }
@@ -5188,6 +5461,7 @@ struct PlayerScreen: View {
         String?
     @State private var subtitleStudioContext: SubtitleStudioContext?
     @State private var castingWeb = false
+    @State private var playerControlsVisible = false
     @State private var sourceSwitchStatus: SourceSwitchStatus?
     @State private var sourceSwitchTask: Task<Void, Never>?
     @State private var sourceSwitchRequestID = UUID()
@@ -5428,7 +5702,8 @@ struct PlayerScreen: View {
             onDismiss: {
                 saveProgress(markNearEndFinished: true)
                 dismiss()
-            }
+            },
+            onControlsVisibilityChange: { playerControlsVisible = $0 }
         )
         .overlay(alignment: .topTrailing) {
             if let source = model.source {
@@ -5441,6 +5716,9 @@ struct PlayerScreen: View {
                         session.player.play()
                     })
                     .padding(.top, 64).padding(.trailing, 14)
+                    .opacity(playerControlsVisible ? 1 : 0)
+                    .allowsHitTesting(playerControlsVisible)
+                    .accessibilityHidden(!playerControlsVisible)
             }
         }
         .overlay(alignment: .top) {
@@ -5493,7 +5771,7 @@ struct PlayerScreen: View {
         .overlay(
             alignment: .bottomTrailing
         ) {
-            if pendingEpisodeLoad == nil,
+            if playerControlsVisible, pendingEpisodeLoad == nil,
                let segment = activeSkipSegment
             {
                 skipButton(
@@ -5514,7 +5792,7 @@ struct PlayerScreen: View {
                         )
                 )
                 .zIndex(90)
-            } else if nextRequest != nil, PlaybackCompletionPolicy.shouldOfferNextEpisode(position: session.position, duration: session.duration) {
+            } else if playerControlsVisible, nextRequest != nil, PlaybackCompletionPolicy.shouldOfferNextEpisode(position: session.position, duration: session.duration) {
                 PlaybackEpisodeActionButton(title: "Next Episode") { completeCurrentPlayback(autoPlayNext: true) }.padding(.trailing, 28).padding(.bottom, 136)
                     .accessibilityIdentifier("player.nextEpisode")
             }
@@ -5682,7 +5960,8 @@ struct PlayerScreen: View {
         }
         .statusBarHidden()
         .fullScreenCover(item: $nextSourcesRequest, onDismiss: { dismiss() }) { request in
-            TitleSourcesView(request: request, nextRequest: nil)
+            NavigationStack { TitleSourcesView(request: request, nextRequest: nil)
+                .toolbar { ToolbarItem(placement: .topBarLeading) { Button("Back", systemImage: "chevron.left") { nextSourcesRequest = nil } } } }
         }
         .fullScreenCover(item: $subtitleStudioContext) { context in
             SubtitleSyncStudioView(
@@ -5990,6 +6269,16 @@ struct PlayerScreen: View {
     }
 
     private func saveProgress(markNearEndFinished: Bool = false) {
+        let hasPlayedSource: Bool
+        if castingWeb, let progress = GoogleCastPlayback.shared.remoteProgress {
+            hasPlayedSource = progress.position > 0 && progress.duration > 0
+        } else {
+            hasPlayedSource = session.player.timeControlStatus == .playing && session.position > 0 && session.duration > 0
+        }
+        if !model.isSwitching, hasPlayedSource,
+           let stream = model.streams.first(where: { $0.id == model.selectedSourceID }) {
+            library.recordPlayedSource("web:" + stream.candidate.id, for: model.request)
+        }
         guard finishedContentID != model.request.contentID else { return }
         if castingWeb, let progress = GoogleCastPlayback.shared.remoteProgress {
             if PlaybackCompletionPolicy.shouldFinishEpisodeOnExit(request: model.request, position: progress.position, duration: progress.duration, knownEndCreditsStart: knownEndCreditsStart) {
@@ -6174,5 +6463,268 @@ private extension View {
         )) {
             Button("OK", role: .cancel) { message.wrappedValue = nil }
         } message: { Text(message.wrappedValue ?? "Unknown error") }
+    }
+}
+
+
+private struct PersonPortrait: View {
+    let name: String
+    let url: URL?
+    let size: CGFloat
+
+    var body: some View {
+        AsyncImage(url: url) { image in
+            image.resizable().scaledToFill()
+        } placeholder: {
+            ZStack {
+                VelagramTheme.elevatedSurface
+                Image(systemName: "person.fill")
+                    .font(.system(size: size * 0.38))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .overlay { Circle().strokeBorder(.white.opacity(0.12), lineWidth: 1) }
+        .accessibilityHidden(true)
+    }
+}
+
+private struct CastShelf: View {
+    let members: [CastMember]
+    @Namespace private var portraits
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(alignment: .top, spacing: 18) {
+                ForEach(members) { member in
+                    if let id = member.tmdbID {
+                        NavigationLink {
+                            destination(member: member, id: id)
+                        } label: {
+                            card(member)
+                                .modifier(PersonTransitionSource(id: member.id, namespace: portraits))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel([member.name, member.character].compactMap { $0 }.joined(separator: ", "))
+                        .accessibilityHint("Opens biography and projects")
+                    } else {
+                        card(member)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .scrollIndicators(.hidden)
+        .contentMargins(.trailing, 4)
+    }
+
+    @ViewBuilder private func destination(member: CastMember, id: Int) -> some View {
+        if #available(iOS 18, *), !reduceMotion {
+            PersonDetailsView(member: member, personID: id)
+                .navigationTransition(.zoom(sourceID: member.id, in: portraits))
+        } else {
+            PersonDetailsView(member: member, personID: id)
+        }
+    }
+
+    private func card(_ member: CastMember) -> some View {
+        VStack(spacing: 8) {
+            PersonPortrait(name: member.name, url: member.imageURL, size: 92)
+            Text(member.name)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+            if let character = member.character, !character.isEmpty {
+                Text(character)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .frame(width: 108, alignment: .top)
+        .contentShape(Rectangle())
+    }
+}
+
+private struct PersonTransitionSource: ViewModifier {
+    let id: String
+    let namespace: Namespace.ID
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 18, *), !reduceMotion {
+            content.matchedTransitionSource(id: id, in: namespace)
+        } else {
+            content
+        }
+    }
+}
+
+private struct PersonDetailsView: View {
+    let member: CastMember
+    let personID: Int
+    @EnvironmentObject private var environment: AppEnvironment
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var profile: TMDBPersonProfile?
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    @State private var biographyExpanded = false
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 30) {
+                header
+                if let profile {
+                    if let biography = profile.biography, !biography.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Biography").font(.title2.bold())
+                            Text(biography)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(biographyExpanded ? nil : 5)
+                            biographyButton
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                    projects("Popular", titles: Array(profile.popular.prefix(20)))
+                    projects("Latest", titles: Array(profile.latest.prefix(20)))
+                    projects("Movies", titles: profile.popular.filter { $0.kind == .movie })
+                    projects("Series", titles: profile.popular.filter { $0.kind == .series })
+                }
+                if isLoading {
+                    ProgressView("Loading projects…")
+                        .frame(maxWidth: .infinity)
+                }
+                if let errorMessage {
+                    ContentUnavailableView {
+                        Label("Couldn’t Load Profile", systemImage: "wifi.exclamationmark")
+                    } description: {
+                        Text(errorMessage)
+                    } actions: {
+                        Button("Try Again") { Task { await load() } }
+                            .buttonStyle(.bordered)
+                    }
+                }
+            }
+            .padding(.top, 24)
+            .padding(.bottom, 36)
+        }
+        .background {
+            VelagramScreenBackground()
+                .overlay(alignment: .top) {
+                    RadialGradient(colors: [environment.theme.accent.opacity(0.22), .clear],
+                                   center: .top, startRadius: 0, endRadius: 420)
+                        .ignoresSafeArea()
+                }
+        }
+        .navigationTitle(profile?.name ?? member.name)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .task(id: personID) { await load() }
+    }
+
+    private var header: some View {
+        VStack(spacing: 14) {
+            PersonPortrait(name: profile?.name ?? member.name,
+                           url: profile?.imageURL ?? member.imageURL, size: 152)
+                .shadow(color: environment.theme.glow.opacity(0.18), radius: 24, y: 8)
+            Text(profile?.name ?? member.name)
+                .font(.largeTitle.bold())
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+            if let department = profile?.knownForDepartment, !department.isEmpty {
+                Text("Known for \(department)")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(environment.theme.accentBright)
+            }
+            if let birthday = profile?.birthday, let birthDate = date(birthday) {
+                Text(birthDescription(birthDate))
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            if let deathday = profile?.deathday, let deathDate = date(deathday) {
+                Text("Died \(deathDate.formatted(date: .abbreviated, time: .omitted))")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            if let place = profile?.placeOfBirth, !place.isEmpty {
+                Text(place).font(.subheadline).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 24)
+    }
+
+    @ViewBuilder private var biographyButton: some View {
+        if #available(iOS 26, *) {
+            Button(biographyExpanded ? "Show Less" : "Read More", action: toggleBiography)
+                .font(.caption.weight(.semibold))
+                .buttonStyle(.glass)
+        } else {
+            Button(biographyExpanded ? "Show Less" : "Read More", action: toggleBiography)
+                .font(.caption.weight(.semibold))
+                .buttonStyle(.bordered)
+        }
+    }
+
+    private func toggleBiography() {
+        withAnimation(reduceMotion ? nil : .smooth(duration: 0.3)) {
+            biographyExpanded.toggle()
+        }
+    }
+
+    @ViewBuilder private func projects(_ title: String, titles: [TrendingTitle]) -> some View {
+        if !titles.isEmpty {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(title).font(.title2.bold()).padding(.horizontal, 20)
+                ScrollView(.horizontal) {
+                    LazyHStack(alignment: .top, spacing: 14) {
+                        ForEach(titles, id: \.lookupKey) { title in
+                            NavigationLink {
+                                DetailsView(item: .tmdbCatalogItem(from: title), tmdbMetadata: title)
+                            } label: {
+                                PosterCard(item: .tmdbCatalogItem(from: title), progressDetail: title.year)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel([title.title, title.year].compactMap { $0 }.joined(separator: ", "))
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+    }
+
+    private func birthDescription(_ birthDate: Date) -> String {
+        let label = "Born \(birthDate.formatted(date: .abbreviated, time: .omitted))"
+        guard profile?.deathday == nil,
+              let age = Calendar.current.dateComponents([.year], from: birthDate, to: .now).year,
+              age >= 0 else { return label }
+        return "\(label) · Age \(age)"
+    }
+
+    private func date(_ value: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.date(from: value)
+    }
+
+    @MainActor private func load() async {
+        guard profile == nil, !isLoading else { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            let result = try await environment.tmdbPerson(id: personID)
+            try Task.checkCancellation()
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) { profile = result }
+        } catch is CancellationError {
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }

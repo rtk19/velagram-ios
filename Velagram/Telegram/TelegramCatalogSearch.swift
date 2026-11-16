@@ -40,14 +40,21 @@ enum TelegramCatalogMatching {
         guard exact || identityMatches else { return nil }
         if let episode = context.request.episode {
             if let found = media.episode {
-                guard found.season == episode.seasonNumber, found.episode == episode.number else { return nil }
+                let numbers = context.isAnime ? [episode.number, context.seasonRelativeEpisodeNumber].compactMap { $0 } : [episode.number]
+                guard found.season == episode.seasonNumber, numbers.contains(found.episode) else { return nil }
             } else {
                 // A season-specific chat can supply the missing season, but an
                 // isolated episode number can never identify a season globally.
                 let season = #"(?i)(?:season|עונה|(?<![A-Za-z])s)[ .,_:-]*0*"# + String(episode.seasonNumber) + #"(?!\d)"#
                 let number = #"(?i)(?:episode|פרק|(?<![A-Za-z])e|^)[ .,_:-]*0*"# + String(episode.number) + #"(?!\d)"#
-                guard chatTitle.range(of: season, options: .regularExpression) != nil,
-                      (media.name + " " + media.caption).range(of: number, options: .regularExpression) != nil else { return nil }
+                let text = media.name + " " + media.caption
+                let scoped = chatTitle.range(of: season, options: .regularExpression) != nil
+                    && text.range(of: number, options: .regularExpression) != nil
+                let absolute = animeAbsoluteNumber(context).map { value in
+                    let pattern = #"(?i)(?<![\p{L}\d])(?:episode[ ._-]*|ep[ ._-]*|e[ ._-]*|פרק[ ._-]*)?0*"# + String(value) + #"(?![\p{L}\d])"#
+                    return text.range(of: pattern, options: .regularExpression) != nil
+                } ?? false
+                guard scoped || absolute else { return nil }
             }
         } else {
             guard media.episode == nil else { return nil }
@@ -73,6 +80,18 @@ enum TelegramCatalogMatching {
         }
         return titles
     }
+    static func animeAbsoluteNumber(_ context: PlaybackLookupContext) -> Int? {
+        guard context.isAnime, let episode = context.request.episode, episode.seasonNumber > 0 else { return nil }
+        return context.absoluteEpisodeNumber ?? (episode.seasonNumber == 1 ? episode.number : nil)
+    }
+    static func animeCodes(_ context: PlaybackLookupContext) -> [String] {
+        guard let absolute = animeAbsoluteNumber(context) else { return [] }
+        var codes = ["E\(absolute)", "EP\(absolute)", "Episode \(absolute)", "פרק \(absolute)", String(absolute)]
+        if let relative = context.seasonRelativeEpisodeNumber, let ep = context.request.episode {
+            codes.insert(String(format: "S%02dE%02d", ep.seasonNumber, relative), at: 0)
+        }
+        return codes
+    }
     static func queries(_ context: PlaybackLookupContext, language: TelegramSearchLanguage = .preferred) -> [String] {
         let titles = aliases(context)
         var queries = titles
@@ -88,10 +107,11 @@ enum TelegramCatalogMatching {
             queries = titles.map { $0 + " " + year } + titles
         }
         var seen = Set<String>()
+        queries += animeCodes(context).flatMap { code in titles.map { $0 + " " + code } }
         let unique = queries.filter { seen.insert($0.lowercased()).inserted }
         let preferred = unique.filter { ($0.range(of: "[א-ת]", options: .regularExpression) != nil) == (language == .hebrew) }
         let remaining = unique.filter { ($0.range(of: "[א-ת]", options: .regularExpression) != nil) != (language == .hebrew) }
-        return Array((preferred + remaining).prefix(56))
+        return Array((preferred + remaining).prefix(context.isAnime ? 120 : 56))
     }
     static func matches(_ pattern: String, in text: String) -> [String] {
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else { return [] }
@@ -173,7 +193,7 @@ struct TelegramCatalogSearch: Sendable {
                 guard !Task.isCancelled else { return (targeted, names) }
                 if let json = try? await transport.call("getChat", ["chat_id": .integer(id)], timeout: 5), let chat = TelegramChat(json) {
                     names[id] = chat.title
-                    for query in [String(ep.number), String(format: "S%02dE%02d", ep.seasonNumber, ep.number)] {
+                    for query in Set([String(ep.number), String(format: "S%02dE%02d", ep.seasonNumber, ep.number)] + TelegramCatalogMatching.animeCodes(context)) {
                         for filter in ["searchMessagesFilterVideo", "searchMessagesFilterDocument"] { targeted.append(Job(query: query, filter: filter, chatID: id)) }
                     }
                 }

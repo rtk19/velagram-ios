@@ -1,8 +1,9 @@
 import Foundation
 import CryptoKit
+import os
 
 struct LiveChannel: Identifiable, Codable, Hashable, Sendable {
-    let id: String
+    var id: String
     var name: String
     var url: URL
     var group: String
@@ -13,11 +14,161 @@ struct LiveChannel: Identifiable, Codable, Hashable, Sendable {
     var bundledImage: String?
     var contentKind: String?
     var catalogTMDBID: Int?
+    var accountID: UUID?
+    var catchupContext: CatchupContext?
+    var supportsCatchup: Bool { (archiveDays ?? 0) > 0 }
+    var archiveDays: Int?
     var resolver: String?
     var resolverData: [String: String]?
+    var tvgName: String?
+
+    /// Xtream archives are continuous transport streams. Seeking requires a
+    /// fresh archive request, rather than a byte/time seek on the existing feed.
+    func catchupPlayback(at seconds: Double) -> (url: URL, offset: Double)? {
+        guard let context = catchupContext, seconds.isFinite,
+              context.duration > 0, !url.isFileURL,
+              url.pathComponents.contains("timeshift") else { return nil }
+        let offset = floor(min(max(0, seconds), max(0, context.duration - 1)))
+        let start = Int(context.program.start.addingTimeInterval(offset).timeIntervalSince1970)
+        let minutes = max(1, Int(ceil((context.duration - offset) / 60)))
+        let stream = url.lastPathComponent
+        let root = url.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        return (root.appending(component: String(minutes)).appending(component: String(start)).appending(component: stream), offset)
+    }
 
     static func identity(_ value: String) -> String {
         SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+/// Conservative matching: channel numbers, +/Plus, regional names and languages
+/// remain part of identity. Only explicit source/quality decorations are removed.
+enum ChannelSources {
+    /// Synchronous, bounded storage shared by foreground and background parsing.
+    /// The lock owns all mutable state, so no unchecked Sendable conformance is needed.
+    private struct NameCache: Sendable {
+        private let storage = OSAllocatedUnfairLock(initialState: [String: String]())
+        func value(for name: String) -> String? {
+            storage.withLock { $0[name] }
+        }
+        func insert(_ value: String, for name: String) {
+            storage.withLock { entries in
+                if entries.count >= 20_000 { entries.removeAll(keepingCapacity: true) }
+                entries[name] = value
+            }
+        }
+    }
+    private static let cleanedNames = NameCache()
+    private static let normalizedNames = NameCache()
+    private static let decorationPatterns: [NSRegularExpression] = {
+        let marker = "(?:מקור\\s+חלופי|גיבויים|גיבוי|חלופי|חלופית|backup|back[ -]?up|bkup|alternate|alternative|mirror|(?:מקור|source)(?=\\s*[:#._-]?\\s*[0-9]))"
+        return [
+            "(?i)(?<![\\p{L}\\p{N}])" + marker + "\\s*(?:(?:מספר|number|no[.]?|server)\\s*)?[:#._-]?\\s*[0-9]*(?![\\p{L}\\p{N}])",
+            "(?i)(?<![\\p{L}\\p{N}])(?:full[ -]?hd|ultra[ -]?hd|4k|8k|uhd|fhd|hd|sd|hevc|h[.]?26[45]|1080[pi]?|720p|2160p|50fps|60fps)(?![\\p{L}\\p{N}])"
+        ]
+            .compactMap { try? NSRegularExpression(pattern: $0) }
+    }()
+    private static let directionMarks = try! NSRegularExpression(pattern: "[\\u200E\\u200F\\u202A-\\u202E\\u2066-\\u2069]")
+    private static let emptyBrackets = try! NSRegularExpression(pattern: #"\(\s*\)|\[\s*\]|\{\s*\}"#)
+    private static let whitespace = try! NSRegularExpression(pattern: "\\s+")
+    private static let identitySeparators = try! NSRegularExpression(pattern: "[\\s_-]+")
+    private static func replace(_ regex: NSRegularExpression, in value: String, with replacement: String) -> String {
+        regex.stringByReplacingMatches(in: value, range: NSRange(value.startIndex..., in: value), withTemplate: replacement)
+    }
+    static func basicName(_ name: String) -> String {
+        if let cached = cleanedNames.value(for: name) { return cached }
+        var value = replace(directionMarks, in: name.precomposedStringWithCompatibilityMapping, with: "")
+        for pattern in decorationPatterns { value = replace(pattern, in: value, with: " ") }
+        value = replace(emptyBrackets, in: value, with: " ")
+        value = replace(whitespace, in: value, with: " ")
+            .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: "-–—|:._()[]{}")))
+        let result = value.isEmpty ? name : value
+        cleanedNames.insert(result, for: name)
+        return result
+    }
+    private static func normalized(_ name: String) -> String {
+        if let cached = normalizedNames.value(for: name) { return cached }
+        let folded = basicName(name).folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+        let result = replace(identitySeparators, in: folded, with: "")
+        normalizedNames.insert(result, for: name)
+        return result
+    }
+    static func identityName(_ channel: LiveChannel) -> String {
+        let cleaned = basicName(channel.name)
+        if let metadata = channel.tvgName, !metadata.isEmpty {
+            let candidate = basicName(metadata)
+            let digits = { (value: String) in value.filter(\.isNumber) }
+            // Require corroboration; providers sometimes reuse one guide ID for
+            // an entire category. Numbers must never collapse into another channel.
+            if digits(cleaned) == digits(candidate),
+               normalized(cleaned) == normalized(candidate) ||
+                channel.guideID.map({ normalized($0) == normalized(candidate) }) == true {
+                return candidate
+            }
+        }
+        return cleaned
+    }
+    static func key(_ channel: LiveChannel) -> String {
+        // Category boundaries prevent accidental merging of regional feeds.
+        "\(channel.isRadio)|\(channel.group.lowercased())|\(normalized(identityName(channel)))"
+    }
+    static func grouped(_ channels: [LiveChannel]) -> [LiveChannel] {
+        var positions: [String: Int] = [:]
+        var representatives: [LiveChannel] = []
+        func score(_ channel: LiveChannel) -> Int {
+            (channel.name == basicName(channel.name) ? 8 : 0) +
+                (channel.guideID?.isEmpty == false ? 2 : 0) + (channel.supportsCatchup ? 1 : 0)
+        }
+        for channel in channels {
+            guard channel.contentKind == nil else { representatives.append(channel); continue }
+            let identity = key(channel)
+            if let index = positions[identity] {
+                if score(channel) > score(representatives[index]) { representatives[index] = channel }
+            } else {
+                positions[identity] = representatives.count
+                representatives.append(channel)
+            }
+        }
+        return representatives.map { channel in
+            var result = channel
+            if channel.contentKind == nil { result.name = identityName(channel) }
+            return result
+        }
+    }
+}
+
+struct CatchupContext: Codable, Hashable, Sendable {
+    let channelID: String
+    let program: GuideProgram
+    var duration: Double { program.end.timeIntervalSince(program.start) }
+    func nextProgram(in schedule: [GuideProgram]) -> GuideProgram? {
+        schedule.filter { $0.channelID == program.channelID && $0.start > program.start && $0.end > $0.start }
+            .min { $0.start < $1.start }
+    }
+}
+
+/// Transport streams can expose a discontinuous PCR timestamp while opening or
+/// crossing an archive segment. Only continuous decoder time advances progress.
+struct CatchupPlaybackClock {
+    private(set) var position: Double
+    private var sample: (time: Double, uptime: TimeInterval)?
+    private let startedAt: TimeInterval
+    init(position: Double, uptime: TimeInterval) {
+        self.position = position; startedAt = uptime
+    }
+    mutating func update(time: Double, uptime: TimeInterval) -> Double {
+        guard time.isFinite, time >= 0 else { return position }
+        if let sample {
+            let delta = time - sample.time
+            if delta >= -0.25, delta <= max(2, uptime - sample.uptime + 1) {
+                position = max(0, position + delta)
+            }
+        } else {
+            guard time <= max(5, uptime - startedAt + 2) else { return position }
+            position += time
+        }
+        sample = (time, uptime)
+        return position
     }
 }
 
@@ -58,6 +209,7 @@ enum PlaylistParser {
             } else if line.hasPrefix("#EXTVLCOPT:http-user-agent=") {
                 headers["User-Agent"] = String(line.dropFirst("#EXTVLCOPT:http-user-agent=".count))
             } else if !line.isEmpty, !line.hasPrefix("#") {
+                guard name != nil else { continue }
                 let parts = line.split(separator: "|", maxSplits: 1).map(String.init)
                 guard let url = URL(string: parts[0], relativeTo: base)?.absoluteURL,
                       ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { name = nil; continue }
@@ -70,6 +222,7 @@ enum PlaylistParser {
                 var entry = LiveChannel(id: LiveChannel.identity(url.absoluteString), name: name ?? url.lastPathComponent,
                     url: url, group: group, logo: attributes["tvg-logo"].flatMap { URL(string: $0, relativeTo: base)?.absoluteURL },
                     guideID: attributes["tvg-id"], headers: headers, isRadio: attributes["radio"] == "true")
+                entry.tvgName = attributes["tvg-name"]
                 let type = attributes["tvg-type"]?.lowercased() ?? attributes["type"]?.lowercased() ?? ""
                 let words = group.lowercased()
                 if url.path.contains("/series/") || ["series", "episode"].contains(type) || words.contains("series") || words.contains("סדרות") {
@@ -125,6 +278,39 @@ struct VelagramHTTP: Sendable {
     }
 }
 
+enum GuideDates {
+    static func availableDays(in programs: [GuideProgram], now: Date = .now, calendar: Calendar = .current) -> [Date] {
+        let today = calendar.startOfDay(for: now)
+        guard let first = programs.lazy.map(\.start).min(), let last = programs.lazy.map(\.end).max() else { return [today] }
+        var days = Set<Date>([today])
+        var day = calendar.startOfDay(for: first)
+        // An airing ending exactly at midnight belongs to the preceding day.
+        let end = calendar.startOfDay(for: last.addingTimeInterval(-0.001))
+        while day <= end {
+            days.insert(day)
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day), next > day else { break }
+            day = next
+        }
+        return days.sorted()
+    }
+
+    static func retainingCatchupHistory(_ previous: [GuideProgram], incoming: [GuideProgram], channels: [LiveChannel], now: Date = .now) -> [GuideProgram] {
+        let windows = Dictionary(channels.compactMap { channel -> (String, Int)? in
+            guard let guideID = channel.guideID, let days = channel.archiveDays, days > 0 else { return nil }
+            return (guideID, days)
+        }, uniquingKeysWith: max)
+        var merged: [String: GuideProgram] = [:]
+        for program in previous {
+            guard let days = windows[program.channelID], program.end <= now,
+                  program.start >= now.addingTimeInterval(-Double(days) * 86400) else { continue }
+            merged[program.id] = program
+        }
+        // Fresh provider data wins, including corrected titles and times.
+        for program in incoming { merged[program.id] = program }
+        return merged.values.sorted { $0.start < $1.start }
+    }
+}
+
 struct GuideProgram: Identifiable, Codable, Hashable, Sendable {
     var id: String { "\(channelID):\(start.timeIntervalSince1970)" }
     let channelID: String
@@ -136,14 +322,16 @@ struct GuideProgram: Identifiable, Codable, Hashable, Sendable {
 
 final class XMLTVParser: NSObject, XMLParserDelegate {
     private var programs: [GuideProgram] = []
+    private var excludedChannelIDs: Set<String> = []
     private var attributes: [String: String] = [:]
     private var title = ""
     private var summary = ""
     private var element = ""
     private var inProgram = false
 
-    static func parse(_ data: Data) throws -> [GuideProgram] {
+    static func parse(_ data: Data, excludingChannelIDs: Set<String> = []) throws -> [GuideProgram] {
         let delegate = XMLTVParser()
+        delegate.excludedChannelIDs = excludingChannelIDs
         let parser = XMLParser(data: data)
         parser.shouldResolveExternalEntities = false
         parser.delegate = delegate
@@ -161,21 +349,28 @@ final class XMLTVParser: NSObject, XMLParserDelegate {
     }
     func parser(_ parser: XMLParser, didEndElement name: String, namespaceURI: String?, qualifiedName: String?) {
         if name == "programme" {
-            if let channel = attributes["channel"], let start = Self.date(attributes["start"]), let end = Self.date(attributes["stop"]), end > start {
+            if let channel = attributes["channel"], !excludedChannelIDs.contains(channel), let start = Self.date(attributes["start"]), let end = Self.date(attributes["stop"]), end > start {
                 programs.append(GuideProgram(channelID: channel, title: title, summary: summary, start: start, end: end))
             }
             inProgram = false
         }
         element = ""
     }
-    static func date(_ text: String?) -> Date? {
-        guard let text else { return nil }
+    private static let zonedDateFormatter: DateFormatter = makeFormatter("yyyyMMddHHmmss Z")
+    private static let utcDateFormatter: DateFormatter = makeFormatter("yyyyMMddHHmmss")
+    private static func makeFormatter(_ format: String) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = text.contains(" ") ? "yyyyMMddHHmmss Z" : "yyyyMMddHHmmss"
-        return formatter.date(from: text)
+        formatter.dateFormat = format
+        return formatter
     }
+    static func date(_ text: String?) -> Date? {
+        guard let text else { return nil }
+        let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (value.contains(" ") ? zonedDateFormatter : utcDateFormatter).date(from: value)
+    }
+
 }
 
 enum BundledChannels {
@@ -189,7 +384,9 @@ enum BundledChannels {
         let linkDetails: Link?
         struct Link: Decodable { let link: String?; let host: String?; let referer: String?; let live: String?; let regex: String?; let ch: String?; let cdn: String? }
     }
-    static func load() -> [LiveChannel] {
+    private static let cached = read()
+    static func load() -> [LiveChannel] { cached }
+    private static func read() -> [LiveChannel] {
         guard let url = Bundle.main.url(forResource: "channels", withExtension: "json"),
               let data = try? Data(contentsOf: url), let entries = try? JSONDecoder().decode([String: Entry].self, from: data) else { return [] }
         return entries.sorted { ($0.value.index ?? 999, $0.key) < ($1.value.index ?? 999, $1.key) }.compactMap { key, entry in

@@ -30,6 +30,8 @@ struct PlayerTrackChoice: Identifiable, Equatable {
     var skipSegments: [PlaybackSkipSegment] = []
     private var catalogCompleted = false
     var playbackEnded: Bool { ended }
+    var catchup: LiveChannel?
+    var resumePlayback = true
     private let rememberPlayback: Bool
     var current: TelegramMedia
     var queue: [TelegramMedia]
@@ -44,6 +46,9 @@ struct PlayerTrackChoice: Identifiable, Equatable {
     var diagnostics: PlaybackDiagnostics?
     var diagnosticsURL: URL? { diagnostics?.url }
     private var metricsTask: Task<Void, Never>?
+    private var nowPlayingArtworkTask: Task<Void, Never>?
+    private var nowPlayingArtwork: MPMediaItemArtwork?
+    private var nowPlayingArtworkGeneration = UUID()
     private var subtitleDiscoveryTask: Task<Void, Never>?
     private var cacheLease: CacheUsage.Lease?
     private var lastAdvance = ProcessInfo.processInfo.systemUptime
@@ -91,12 +96,16 @@ struct PlayerTrackChoice: Identifiable, Equatable {
     private var nativeFallbackAttempted = false
     private var vlcEvents: VLCPlaybackEvents?
     private var pendingResume: Double?
+    private(set) var catchupOffset: Double = 0
+    private var openingCatchupSeek = false
+    private var catchupClock: CatchupPlaybackClock?
+    private var catchupSwitchTask: Task<Void, Never>?
     private var lastPersistedSecond = -1
     private var interruptionWasPlaying = false
     private var notificationTokens: [NSObjectProtocol] = []
     private var remoteTargets: [(MPRemoteCommand, Any)] = []
     private var previousIdleDisabled = false
-    var progressID: String { current.remoteURL.map { "remote:" + LiveChannel.identity($0.absoluteString) } ?? "telegram:\(current.id)" }
+    var progressID: String { catchup.map { "iptv:" + $0.id } ?? current.remoteURL.map { "remote:" + LiveChannel.identity($0.absoluteString) } ?? "telegram:\(current.id)" }
     private var rateKey: String { current.episode == nil ? progressID : "series:\(current.seriesKey)" }
     var next: TelegramMedia? {
         guard let index = queue.firstIndex(where: { $0.id == current.id }), index + 1 < queue.count else { return nil }
@@ -106,6 +115,7 @@ struct PlayerTrackChoice: Identifiable, Equatable {
         self.rememberPlayback = rememberPlayback
         current = media; self.store = store; self.queue = queue; self.catalogRequest = catalogRequest; self.library = library
     }
+    var sourceHistoryID: String?
     var sourceHeaders: [String: String] = [:]
     private var captionAppearance = SystemCaptionStyle.current()
     func refreshCaptionAppearance() {
@@ -116,8 +126,12 @@ struct PlayerTrackChoice: Identifiable, Equatable {
         // Parsed captions read the device style directly in the overlay.
     }
     nonisolated static func prefersNative(_ media: TelegramMedia) -> Bool {
-        ["mp4", "m4v", "mov", "m3u8", "mp3", "m4a", "aac"].contains((media.name as NSString).pathExtension.lowercased())
-            || media.mimeType == "application/vnd.apple.mpegurl"
+        let supported = ["mp4", "m4v", "mov", "movpkg", "m3u8", "mp3", "m4a", "aac"]
+        let extensions = [(media.name as NSString).pathExtension.lowercased(), media.remoteURL?.pathExtension.lowercased() ?? ""]
+        if extensions.contains(where: supported.contains) { return true }
+        if extensions.contains(where: { ["mkv", "webm", "avi", "ts"].contains($0) }) { return false }
+        let mime = media.mimeType.split(separator: ";").first.map(String.init)?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+        return ["video/mp4", "video/x-m4v", "video/quicktime", "audio/mp4", "audio/mpeg", "audio/aac", "application/vnd.apple.mpegurl", "application/x-mpegurl"].contains(mime)
     }
     func start(environment: AppEnvironment? = nil) async {
         subtitleDiscoveryTask?.cancel()
@@ -127,25 +141,32 @@ struct PlayerTrackChoice: Identifiable, Equatable {
         diagnostics?.event("start", ["native_preferred": Self.prefersNative(current) ? 1 : 0, "total": Double(current.size)])
         transfer = .init(); lastAdvance = ProcessInfo.processInfo.systemUptime; userPaused = false
         stopped = false; failure = nil; opening = true; resumed = false; ended = false; position = 0; appliedRate = 1; pendingRateChange = nil
+        catchupOffset = 0; openingCatchupSeek = false
+        catchupClock = nil
         externalCues = []; externalSubtitleSource = nil; externalRenderedByVLC = false; selectedSubtitleID = "auto"; subtitleName = "Automatic"
         textTracks = []; audioTracks = []; nativeFallbackAttempted = false
         let timing = UserDefaults.standard.dictionary(forKey: "velagram.telegram.timing.\(progressID)") as? [String: Double] ?? [:]
         audioDelay = timing["audio"] ?? 0; subtitleDelay = timing["subtitle"] ?? 0
         if let catalogRequest { fitToFill = library?.isPlayerZoomedToFill(for: catalogRequest) ?? false }
-        duration = max(Double(current.duration), VelagramStore.shared.progress[progressID]?.duration ?? 0)
+        duration = catchup?.catchupContext?.duration ?? max(Double(current.duration), VelagramStore.shared.progress[progressID]?.duration ?? 0)
         do {
             if cacheLease == nil { cacheLease = try await CacheUsage.shared.waitForReader() }
+            try Task.checkCancellation(); guard !stopped else { cacheLease?.release(); cacheLease = nil; return }
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [])
             try AVAudioSession.sharedInstance().setActive(true)
             let orientation = PlayerOrientationPreference(rawValue: UserDefaults.standard.string(forKey: "player.orientation") ?? "") ?? .autoRotate
             AppOrientationController.shared.beginPlayback(using: orientation)
             if notificationTokens.isEmpty { previousIdleDisabled = UIApplication.shared.isIdleTimerDisabled; installSystemControls() }
             UIApplication.shared.isIdleTimerDisabled = true
+            if let catalogRequest { TelegramDownloads.shared.track(current, request: catalogRequest, store: store) }
+            else { TelegramDownloads.shared.trackRaw(current, store: store) }
+            configureNowPlayingArtwork(environment: environment)
             let url: URL
             if let local = TelegramDownloads.shared.local(current) { url = local }
             else if let remote = current.remoteURL { url = remote }
             else {
                 if let fresh = TelegramMedia.parse(try await store.transport.call("getMessage", ["chat_id": .integer(current.chatID), "message_id": .integer(current.messageID)])) { current = fresh }
+                try Task.checkCancellation(); guard !stopped else { return }
                 let stream = try TelegramStreamServer(transport: store.transport, media: current, diagnostics: diagnostics) { [weak self] message in
                     Task { @MainActor [weak self] in guard let self, !self.stopped else { return }; self.failure = message; self.opening = false }
                 }
@@ -158,7 +179,7 @@ struct PlayerTrackChoice: Identifiable, Equatable {
             rate = Float(catalogRequest.flatMap { library?.playbackRate(for: $0, defaultRate: defaultRate) } ?? remembered[rateKey] ?? defaultRate)
             if rememberPlayback, current.chatID != 0 { store.remember(current) }
             useNative = Self.prefersNative(current)
-            if let environment, catalogRequest != nil, subtitlesEnabled {
+            if let environment, catalogRequest != nil, subtitlesEnabled, !OfflineConnectivity.shared.isOffline {
                 if UserDefaults.standard.string(forKey: "player.subtitleLoadingMode") == SubtitleLoadingMode.completeBeforePlayback.rawValue {
                     await loadPreferredSubtitles(environment: environment)
                     try Task.checkCancellation(); guard !stopped else { return }
@@ -257,13 +278,15 @@ struct PlayerTrackChoice: Identifiable, Equatable {
             if nativePlayer.isExternalPlaybackActive, !airPlayAttempted, current.remoteURL == nil { await prepareAirPlay(); return }
             if nativePlayer.currentItem?.status == .failed, !nativeFallbackAttempted, let url = playbackURL {
                 pendingResume = max(position, library.flatMap { library in catalogRequest.map { library.resumePosition(for: $0) } } ?? 0)
+                diagnostics?.event("native_failed_fallback")
+                notice = "Apple's player could not play this stream. Switched to the compatibility player."
                 nativeFallbackAttempted = true; nativePlayer.pause(); useNative = false; resumed = false
                 do { try openVLC(url) } catch { failure = error.localizedDescription }; return
             }
             let value = nativePlayer.currentTime().seconds
             if value.isFinite { position = max(0, value) }
             let length = nativePlayer.currentItem?.duration.seconds ?? 0
-            if length.isFinite { duration = max(duration, length) }
+            if catchup == nil, length.isFinite { duration = max(duration, length) }
             playing = nativePlayer.rate > 0; buffering = nativePlayer.timeControlStatus == .waitingToPlayAtSpecifiedRate
             if nativePlayer.currentItem?.status == .readyToPlay {
                 if !nativeTracksLoaded { await loadNativeTracks() } else { refreshNativeTracks() }
@@ -273,12 +296,22 @@ struct PlayerTrackChoice: Identifiable, Equatable {
             ended = resumed && duration > 0 && position >= duration - 0.3 && nativePlayer.rate == 0
         } else {
             playing = player.isPlaying
-            position = max(0, Double(player.time.intValue) / 1000)
+            if !openingCatchupSeek || player.state == .playing || player.state == .paused {
+                let time = max(0, Double(player.time.intValue) / 1000)
+                if catchupClock != nil { position = catchupClock!.update(time: time, uptime: ProcessInfo.processInfo.systemUptime) }
+                else { position = time }
+            }
+            if openingCatchupSeek, player.state == .playing {
+                openingCatchupSeek = false; opening = false
+                requestVLCRate(rate); applyTiming()
+                if userPaused { player.pause(); playing = false }
+                diagnostics?.event("catchup_seek_ready", ["offset_seconds": catchupOffset])
+            }
             let now = ProcessInfo.processInfo.systemUptime
             let refreshDetails = now - lastDetailsRefresh >= 1 || (player.isPlaying && audioTracks.isEmpty)
             if refreshDetails {
                 lastDetailsRefresh = now
-                duration = max(duration, Double(player.media?.length.intValue ?? 0) / 1000)
+                if catchup == nil { duration = max(duration, Double(player.media?.length.intValue ?? 0) / 1000) }
                 let dimensions = player.videoSize
                 if dimensions.width > 0, dimensions.height > 0, videoDimensions != dimensions { videoDimensions = dimensions }
                 pipController?.invalidatePlaybackState()
@@ -297,9 +330,9 @@ struct PlayerTrackChoice: Identifiable, Equatable {
                     let language = UserDefaults.standard.string(forKey: "player.audioLanguage") ?? "en"
                     if let index = player.audioTracks.firstIndex(where: { SubtitleLanguage.canonicalCode($0.language) == SubtitleLanguage.canonicalCode(language) }) { player.selectTrack(at: index, type: .audio) }
                 }
-                let saved = pendingResume ?? catalogRequest.flatMap { library?.resumePosition(for: $0) } ?? VelagramStore.shared.progress[progressID]?.position ?? 0
+                let saved = resumePlayback ? (pendingResume ?? catalogRequest.flatMap { library?.resumePosition(for: $0) } ?? VelagramStore.shared.progress[progressID]?.position ?? 0) : 0
                 pendingResume = nil
-                if saved > 0, saved < duration - 2 { seek(saved); position = saved }
+                if saved > 0, saved < duration - 2 { seek(saved) }
                 applyTiming()
             }
             if refreshDetails {
@@ -321,7 +354,11 @@ struct PlayerTrackChoice: Identifiable, Equatable {
                     player.selectTextTracks([track]); selectedSubtitleID = track.trackId; subtitleName = track.trackName
                 }
             }
-            if resumed, player.state == .stopped, duration > 0, max(previous, position) >= duration - 2 { ended = true; position = duration }
+            if resumed, !openingCatchupSeek, player.state == .stopped, duration > 0, max(previous, position) >= duration - 2 { ended = true; position = duration }
+        }
+        if catchup != nil, resumed, position >= duration, duration > 0 {
+            position = duration; ended = true
+            nativePlayer.pause(); player.pause()
         }
         subtitleText = useNative || !externalRenderedByVLC ? CaptionTimeline.text(at: position - subtitleDelay, cues: externalCues) : ""
         pipAdapter?.clock.update(position: position, duration: duration, playing: playing)
@@ -329,7 +366,7 @@ struct PlayerTrackChoice: Identifiable, Equatable {
     }
     private func restorePosition() async {
         resumed = true
-        let saved = pendingResume ?? catalogRequest.flatMap { library?.resumePosition(for: $0) } ?? VelagramStore.shared.progress[progressID]?.position ?? 0
+        let saved = resumePlayback ? (pendingResume ?? catalogRequest.flatMap { library?.resumePosition(for: $0) } ?? VelagramStore.shared.progress[progressID]?.position ?? 0) : 0
         pendingResume = nil
         if saved > 0, saved < duration - 2 {
             await nativePlayer.seek(to: CMTime(seconds: saved, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
@@ -457,7 +494,31 @@ struct PlayerTrackChoice: Identifiable, Equatable {
         let target = min(duration, max(0, seconds)); position = target
         lastAdvance = ProcessInfo.processInfo.systemUptime; diagnostics?.event("seek", ["target_seconds": target])
         if casting { let options = GCKMediaSeekOptions(); options.interval = target; GoogleCastPlayback.shared.client?.seek(with: options) }
+        else if !useNative, let request = catchup?.catchupPlayback(at: target) {
+            // The provider does not honor VLC's seeks on this TS response. Open
+            // the requested archive timestamp and translate its clock back to
+            // the full program timeline, including while the new feed opens.
+            let fitMode = player.videoFitMode
+            let retired = VLCPlayerRetirement(player)
+            player.delegate = nil
+            catchupSwitchTask?.cancel()
+            let replacement = VLCMediaPlayer()
+            player = replacement; player.videoFitMode = fitMode
+            catchupOffset = request.offset; position = request.offset
+            catchupClock = CatchupPlaybackClock(position: request.offset, uptime: ProcessInfo.processInfo.systemUptime)
+            openingCatchupSeek = true; opening = true; buffering = true; ended = false
+            playbackURL = request.url
+            diagnostics?.event("catchup_seek_request", ["offset_seconds": request.offset])
+            catchupSwitchTask = Task { [weak self] in
+                await retired.stop()
+                retired.player.drawable = nil
+                guard let self, !Task.isCancelled, !self.stopped, self.player === replacement else { return }
+                do { try self.openVLC(request.url) }
+                catch { self.openingCatchupSeek = false; self.opening = false; self.failure = error.localizedDescription }
+            }
+        }
         else if useNative { nativePlayer.seek(to: CMTime(seconds: target, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) }
+        else if catchup != nil { player.time = VLCTime(int: Int32(min(Double(Int32.max), target * 1000))) }
         else { player.position = target / duration }
         updateNowPlaying()
     }
@@ -509,6 +570,12 @@ struct PlayerTrackChoice: Identifiable, Equatable {
     }
     func recordCatalogProgress(position: Double, duration: Double) {
         guard rememberPlayback, duration > 0, duration.isFinite, position.isFinite else { return }
+        if let catalogRequest, position > 0 {
+            let saved = TelegramDownloads.shared.saved.first { $0.media.id == current.id }
+            let identity = sourceHistoryID ?? saved?.sourceID.map { "web:" + $0 }
+                ?? TelegramReleaseGroup.group([current]).first.map { "telegram:" + $0.id }
+            if let identity { library?.recordPlayedSource(identity, for: catalogRequest) }
+        }
         if let catalogRequest, !catalogCompleted {
             if PlaybackCompletionPolicy.shouldFinishEpisodeOnExit(request: catalogRequest, position: position, duration: duration, knownEndCreditsStart: skipSegments.first(where: { $0.kind == .outro })?.start) {
                 finishCatalogPlayback()
@@ -588,10 +655,15 @@ struct PlayerTrackChoice: Identifiable, Equatable {
     }
     func stop() {
         guard !stopped else { return }
+        nowPlayingArtworkTask?.cancel(); nowPlayingArtworkTask = nil
+        nowPlayingArtworkGeneration = UUID(); nowPlayingArtwork = nil
         subtitleDiscoveryTask?.cancel(); subtitleDiscoveryTask = nil
         metricsTask?.cancel(); metricsTask = nil; diagnostics?.event("stop", ["position": position])
-        stopped = true; cacheLease?.release(); cacheLease = nil; endTemporarySpeed(); persist(); nativePlayer.pause()
-        pipController?.stopPictureInPicture(); pipController = nil; player.stop(); player.drawable = nil
+        stopped = true; cacheLease?.release(); cacheLease = nil; endTemporarySpeed(); persist(); nativePlayer.pause(); nativePlayer.replaceCurrentItem(with: nil)
+        catchupSwitchTask?.cancel(); catchupSwitchTask = nil
+        pipController?.stopPictureInPicture(); pipController = nil
+        let retired = VLCPlayerRetirement(player); player.delegate = nil
+        Task { await retired.stop(); retired.player.drawable = nil }
         server?.stop(); server = nil
         if !casting { networkServer?.stop() }; networkServer = nil
         GoogleCastPlayback.shared.clear()
@@ -631,10 +703,43 @@ struct PlayerTrackChoice: Identifiable, Equatable {
         remoteTargets.append((commands.skipForwardCommand, commands.skipForwardCommand.addTarget { [weak self] _ in Task { @MainActor [weak self] in guard let self else { return }; self.seek(self.position + 15) }; return .success }))
         remoteTargets.append((commands.skipBackwardCommand, commands.skipBackwardCommand.addTarget { [weak self] _ in Task { @MainActor [weak self] in guard let self else { return }; self.seek(self.position - 15) }; return .success }))
     }
+    private func configureNowPlayingArtwork(environment: AppEnvironment?) {
+        nowPlayingArtworkTask?.cancel()
+        let generation = UUID(); nowPlayingArtworkGeneration = generation
+        nowPlayingArtwork = nil
+        let downloads = TelegramDownloads.shared
+        let record = catalogRequest.flatMap { downloads.available(for: $0).first }
+            ?? downloads.saved.first { OfflineLibraryIndex.sameRelease($0.media, current) }
+        let poster = record?.artworkURL.flatMap { UIImage(contentsOfFile: $0.path) }
+        let thumbnail = current.thumbnailFileID.flatMap { store.thumbnails[$0] }.flatMap { UIImage(contentsOfFile: $0) }
+        if let image = poster ?? thumbnail { nowPlayingArtwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image } }
+        updateNowPlaying()
+        guard poster == nil, let posterURL = catalogRequest?.media.posterURL ?? record?.catalogMedia?.posterURL ?? catchup?.logo else { return }
+        nowPlayingArtworkTask = Task { [weak self] in
+            do {
+                let image: UIImage
+                if let environment { image = try await environment.cachedImage(for: posterURL) }
+                else {
+                    let data = try await TMDBClient().imageData(for: posterURL)
+                    guard let decoded = UIImage(data: data) else { return }
+                    image = decoded
+                }
+                try Task.checkCancellation()
+                guard let self, !self.stopped, self.nowPlayingArtworkGeneration == generation else { return }
+                self.nowPlayingArtwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                self.updateNowPlaying()
+            } catch { }
+        }
+    }
     private func updateNowPlaying() {
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = [MPMediaItemPropertyTitle: catalogRequest?.displayTitle ?? current.title,
+        guard !stopped else { return }
+        var info: [String: Any] = [MPMediaItemPropertyTitle: catalogRequest?.nowPlayingTitle ?? current.title,
             MPMediaItemPropertyPlaybackDuration: duration, MPNowPlayingInfoPropertyElapsedPlaybackTime: position,
-            MPNowPlayingInfoPropertyPlaybackRate: playing ? rate : 0]
+            MPNowPlayingInfoPropertyPlaybackRate: playing ? rate : 0,
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.video.rawValue]
+        if let subtitle = catalogRequest?.nowPlayingSubtitle { info[MPMediaItemPropertyArtist] = subtitle }
+        if let nowPlayingArtwork { info[MPMediaItemPropertyArtwork] = nowPlayingArtwork }
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
 }
 
@@ -661,6 +766,7 @@ enum CaptionTimeline {
 
 struct TelegramPlayerView: View {
     @EnvironmentObject private var environment: AppEnvironment
+    var onPlaybackEnded: (() -> Void)?
     @State private var nextSourcesRequest: PlaybackRequest?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -674,8 +780,12 @@ struct TelegramPlayerView: View {
     @State private var feedback: String?
     @State private var interaction = UUID()
     @State private var captionStyle = SystemCaptionStyle.current()
-    init(media: TelegramMedia, store: TelegramStore, queue: [TelegramMedia] = [], catalogRequest: PlaybackRequest? = nil, library: LibraryStore? = nil, rememberPlayback: Bool = true, headers: [String: String] = [:], nextCatalogRequest: PlaybackRequest? = nil) {
+    init(media: TelegramMedia, store: TelegramStore, queue: [TelegramMedia] = [], catalogRequest: PlaybackRequest? = nil, library: LibraryStore? = nil, rememberPlayback: Bool = true, headers: [String: String] = [:], sourceHistoryID: String? = nil, nextCatalogRequest: PlaybackRequest? = nil, catchup: LiveChannel? = nil, resumePlayback: Bool = true, onPlaybackEnded: (() -> Void)? = nil) {
         let session = TelegramPlayerSession(media: media, store: store, queue: queue, catalogRequest: catalogRequest, library: library, rememberPlayback: rememberPlayback)
+        self.onPlaybackEnded = onPlaybackEnded
+        session.catchup = catchup
+        session.resumePlayback = resumePlayback
+        session.sourceHistoryID = sourceHistoryID
         session.sourceHeaders = headers
         session.nextCatalogRequest = nextCatalogRequest
         _session = State(initialValue: session)
@@ -685,11 +795,15 @@ struct TelegramPlayerView: View {
             ZStack {
                 Color.black.ignoresSafeArea()
                 if session.useNative {
-                    TelegramNativePlayerController(session: session, onDoubleTap: doubleTap, onHold: hold, onTap: toggleControls)
+                    TelegramNativePlayerController(session: session, onDoubleTap: doubleTap, onHold: hold, onTap: {}, onControlsVisibilityChange: { controlsVisible = $0 })
                         .ignoresSafeArea()
                 } else {
                     TelegramVideoSurface(session: session)
-                        .frame(width: videoFrame(in: geometry.size).width, height: videoFrame(in: geometry.size).height)
+                        .id(ObjectIdentifier(session.player))
+                        // VLC sizes its video inside the drawable. Give it the
+                        // viewport so replacing a feed cannot double-letterbox
+                        // or clip the video in portrait orientation.
+                        .frame(width: geometry.size.width, height: geometry.size.height)
                     PlayerGestureSurface(onTap: toggleControls, onDoubleTap: doubleTap, onHold: hold, onZoom: { session.fitToFill = $0; touch() }).ignoresSafeArea()
                 }
                 if !session.subtitleText.isEmpty {
@@ -703,7 +817,7 @@ struct TelegramPlayerView: View {
                 if session.casting {
                     VStack(spacing: 14) { Image(systemName: "tv.fill").font(.system(size: 54)); Text("Playing on your Cast device").font(.headline) }.foregroundStyle(.white).allowsHitTesting(false)
                 }
-                if !session.useNative, (controlsVisible || session.userPaused || session.opening), !controlsLocked {
+                if !session.useNative, controlsVisible, !controlsLocked {
                     VStack(spacing: 0) {
                         header.padding(.top, max(geometry.safeAreaInsets.top, viewportInsets.top))
                         Spacer()
@@ -726,7 +840,7 @@ struct TelegramPlayerView: View {
                         VStack { LinearGradient(colors: [.black.opacity(0.65), .clear], startPoint: .top, endPoint: .bottom).frame(height: 140); Spacer(); if !session.useNative { LinearGradient(colors: [.clear, .black.opacity(0.8)], startPoint: .top, endPoint: .bottom).frame(height: 180) } }.ignoresSafeArea().allowsHitTesting(false)
                     }.transition(.opacity)
                 }
-                if !controlsLocked, !session.opening, session.failure == nil {
+                if controlsVisible, !controlsLocked, !session.opening, session.failure == nil {
                     VStack {
                         Spacer()
                         HStack {
@@ -755,7 +869,7 @@ struct TelegramPlayerView: View {
                             .padding(.trailing, max(geometry.safeAreaInsets.trailing, viewportInsets.right) + 14)
                     }.transition(.opacity)
                 }
-                if controlsLocked {
+                if controlsLocked, controlsVisible {
                     VStack { HStack { Spacer(); Button { controlsLocked = false; controlsVisible = true; touch() } label: { Label("Unlock", systemImage: "lock.fill").padding(12).background(.ultraThinMaterial, in: Capsule()) }.accessibilityIdentifier("player.unlock") }; Spacer() }.padding()
                 }
                 if session.opening {
@@ -796,22 +910,27 @@ struct TelegramPlayerView: View {
         .task(id: session.catalogRequest?.contentID) {
             guard let request = session.catalogRequest, let library = session.library else { return }
             if let next = session.nextCatalogRequest, !library.isWatched(next) { return }
+            guard !OfflineConnectivity.shared.isOffline else { return }
             session.nextCatalogRequest = await nextUnwatchedPlaybackRequest(after: request, environment: environment, library: library)
         }
         .task(id: session.duration > 0 && !session.opening) {
-            guard let request = session.catalogRequest, session.duration > 0, !session.opening else { return }
+            guard let request = session.catalogRequest, session.duration > 0, !session.opening, !OfflineConnectivity.shared.isOffline else { return }
             let segments = await environment.playbackSkipSegments(for: request, duration: session.duration)
             guard !Task.isCancelled else { return }
             session.skipSegments = segments
         }
         .onChange(of: session.playbackEnded) { _, ended in
+            if ended { onPlaybackEnded?() }
             if ended, session.nextCatalogRequest != nil, UserDefaults.standard.object(forKey: "player.autoNext") as? Bool ?? true { openNextEpisode() }
         }
         .fullScreenCover(item: $nextSourcesRequest, onDismiss: { dismiss() }) { request in
-            TitleSourcesView(request: request, nextRequest: nil)
+            if OfflineConnectivity.shared.isOffline, let item = TelegramDownloads.shared.available(for: request).first {
+                TelegramPlayerView(media: item.media, store: session.store, catalogRequest: request, library: session.library,
+                                   nextCatalogRequest: session.library.flatMap { TelegramDownloads.shared.nextAvailable(after: request, library: $0) })
+            } else { NavigationStack { TitleSourcesView(request: request, nextRequest: nil).toolbar { ToolbarItem(placement: .topBarLeading) { Button("Back", systemImage: "chevron.left") { nextSourcesRequest = nil } } } } }
         }
         .task(id: interaction) {
-            guard session.playing || session.useNative, !UIAccessibility.isVoiceOverRunning else { return }
+            guard !session.useNative, session.playing, !UIAccessibility.isVoiceOverRunning else { return }
             try? await Task.sleep(for: .seconds(4))
             if !Task.isCancelled, !seeking, !settings, !session.temporaryRate { withAnimation(.easeOut(duration: 0.2)) { controlsVisible = false } }
         }
@@ -903,7 +1022,7 @@ struct TelegramPlayerView: View {
         Button { action(); touch() } label: { Image(systemName: symbol).font(.system(size: 32, weight: .medium)).frame(width: 56, height: 56) }.modifier(PlayerGlass(circle: true)).accessibilityLabel(label)
     }
     private func touch() { interaction = UUID() }
-    private func toggleControls() { guard !controlsLocked else { return }; withAnimation(.easeInOut(duration: 0.18)) { controlsVisible.toggle() }; touch() }
+    private func toggleControls() { withAnimation(.easeInOut(duration: 0.18)) { controlsVisible.toggle() }; touch() }
     private func doubleTap(_ fraction: CGFloat) {
         guard !controlsLocked else { return }
         let interval = PlaybackGesturePreferences.skipInterval()

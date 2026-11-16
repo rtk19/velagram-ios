@@ -133,7 +133,15 @@ actor CacheManager {
         result.subtitles = diskBytes(caches.appending(path: "Velagram/Subtitles"))
         result.other += diskBytes(support.appending(path: "Velagram/PlaybackDiagnostics")) + temporaryFiles().reduce(0) { $0 + diskBytes($1) }
         result.other += Int64(httpCache.currentDiskUsage)
-        result.savedDownloads = max(0, diskBytes(support.appending(path: "Velagram/TelegramDownloads")) - diskBytes(support.appending(path: "Velagram/TelegramDownloads/downloads.json")))
+        let offlineDirectory = support.appending(path: "Velagram/TelegramDownloads")
+        let records = (try? Data(contentsOf: offlineDirectory.appending(path: "downloads.json"))).flatMap { try? JSONDecoder().decode([TelegramSavedDownload].self, from: $0) } ?? []
+        let savedArtwork = Set(records.filter { !$0.isCached }.flatMap { $0.artworkFilenames })
+        let cachedNames = Set(records.filter(\.isCached).flatMap { $0.artworkFilenames }).subtracting(savedArtwork)
+        let cachedArtwork = cachedNames.reduce(Int64(0)) { $0 + diskBytes(offlineDirectory.appending(path: $1)) }
+        result.savedDownloads = max(0, diskBytes(offlineDirectory) - diskBytes(offlineDirectory.appending(path: "downloads.json")) - diskBytes(offlineDirectory.appending(path: "metadata.json")) - cachedArtwork)
+        let assetPaths = Set(records.filter { !$0.isCached && $0.offlineAssetPath != nil }.map(\.url))
+        result.savedDownloads += assetPaths.reduce(Int64(0)) { $0 + diskBytes($1) }
+        result.images += cachedArtwork
         result.available = (try? fm.attributesOfFileSystem(forPath: caches.path)[.systemFreeSize] as? NSNumber)?.int64Value ?? 0
         return result
     }
@@ -162,6 +170,9 @@ actor CacheManager {
             try remove(support.appending(path: "Velagram/PlaybackDiagnostics"))
             for file in temporaryFiles() { try remove(file) }
         }
+        if support == FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0] {
+            await MainActor.run { TelegramDownloads.shared.refreshAfterCacheCleanup(removeArtwork: action == .images || action == .all) }
+        }
         defaults.set(Date().timeIntervalSince1970, forKey: "cache.lastCleaned")
     }
     func maintain(transport: any TelegramTransport, force: Bool = false, now: Date = .now) async {
@@ -174,6 +185,9 @@ actor CacheManager {
         defer { lease.release() }
         do {
             _ = try await transport.call("optimizeStorage", Self.optimization(types: TelegramCacheStatistics.videoTypes, days: days == .forever ? nil : days.rawValue, limit: gb > 0 ? Int64(gb) * 1_000_000_000 : nil), timeout: 60)
+            if support == FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0] {
+                await MainActor.run { TelegramDownloads.shared.refreshAfterCacheCleanup(removeArtwork: false) }
+            }
             lastMaintenance = now; pendingMaintenance = false
         } catch { /* Retry on the next idle foreground; no destructive fallback. */ }
     }

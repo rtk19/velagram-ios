@@ -1,10 +1,13 @@
 import SwiftUI
+import UIKit
 
 struct TelegramPlaybackSettings: View {
     @EnvironmentObject private var environment: AppEnvironment
     @Environment(\.dismiss) private var dismiss
     @Bindable var session: TelegramPlayerSession
     var subtitlesOnly = false
+    @State private var installedPlayers: [ExternalVideoPlayer] = []
+    @State private var externalMessage: String?
     @State private var importing = false
     @State private var studio = false
     @State private var online: [SubtitleSource] = []
@@ -52,6 +55,30 @@ struct TelegramPlaybackSettings: View {
                     }
                     Text("Audio and video use the same playback clock. Adjust delay only if this particular release is out of sync.").font(.caption).foregroundStyle(.secondary)
                 }
+                Section("External player") {
+                    if let local = TelegramDownloads.shared.local(session.current) ?? session.current.remoteURL.flatMap({ $0.isFileURL ? $0 : nil }) {
+                        ShareLink(item: local) { Label("Open downloaded file in…", systemImage: "arrow.up.forward.app") }
+                    } else if let remote = session.current.remoteURL, session.sourceHeaders.isEmpty {
+                        ForEach(installedPlayers) { player in
+                            Button("Open in \(player.rawValue)") {
+                                Task { @MainActor in
+                                    guard let url = player.playURL(remote) else { externalMessage = "This URL cannot be opened externally."; return }
+                                    let wasPlaying = session.playing
+                                    session.pause()
+                                    if await UIApplication.shared.open(url) { dismiss() }
+                                    else {
+                                        externalMessage = "Could not open \(player.rawValue)."
+                                        if wasPlaying { session.play() }
+                                    }
+                                }
+                            }
+                        }
+                        if installedPlayers.isEmpty { Text("Install VLC or Infuse to open streams in another player.").font(.caption).foregroundStyle(.secondary) }
+                    } else {
+                        Text("Download this video first, then open the downloaded file in another player. Telegram streams and authenticated sources need Velagram to remain active.").font(.caption).foregroundStyle(.secondary)
+                    }
+                    if let externalMessage { Text(externalMessage).font(.caption).foregroundStyle(.secondary) }
+                }.onAppear { installedPlayers = ExternalVideoPlayer.allCases.filter { UIApplication.shared.canOpenURL($0.probeURL) } }
                 Section("TV playback") {
                     Text(session.useNative ? "AirPlay video and Picture in Picture use Apple's native player. Cast playback depends on the formats supported by your TV." : "For AirPlay video, choose an MP4/HLS release or use iOS Screen Mirroring. This release uses VLC; Cast playback depends on your TV's codec support.").font(.caption).foregroundStyle(.secondary)
                     Text("Keep Velagram open while sending Telegram or relayed media to a TV.").font(.caption).foregroundStyle(.secondary)
@@ -166,5 +193,21 @@ private struct TelegramSubtitleStudio: View {
     }
     private func adjust(_ delta: Double) {
         session.subtitleDelay = min(300, max(-300, session.subtitleDelay + delta)); session.applyTiming()
+    }
+}
+
+enum ExternalVideoPlayer: String, CaseIterable, Identifiable {
+    case vlc = "VLC"
+    case infuse = "Infuse"
+    var id: String { rawValue }
+    var probeURL: URL { URL(string: self == .vlc ? "vlc-x-callback://" : "infuse://")! }
+    func playURL(_ source: URL) -> URL? {
+        guard ["http", "https", "rtsp"].contains(source.scheme?.lowercased() ?? "") else { return nil }
+        var components = URLComponents()
+        components.scheme = self == .vlc ? "vlc-x-callback" : "infuse"
+        components.host = "x-callback-url"
+        components.path = self == .vlc ? "/stream" : "/play"
+        components.queryItems = [URLQueryItem(name: "url", value: source.absoluteString)]
+        return components.url
     }
 }

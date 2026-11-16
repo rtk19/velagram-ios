@@ -24,11 +24,21 @@ struct TelegramByteRange: Equatable, Sendable {
     private static var invalid: TelegramError { TelegramError(code: 416, message: "Requested file range is unavailable.") }
 }
 
+/// Closing a stream invalidates queued reads before asynchronous TDLib cleanup runs.
+final class TelegramPlaybackDownloadOwner: @unchecked Sendable {
+    let id = UUID()
+    private let lock = NSLock()
+    private var closed = false
+    var isClosed: Bool { lock.withLock { closed } }
+    func close() { lock.withLock { closed = true } }
+}
+
 actor TelegramFileReader {
     static let prefetchBytes: Int64 = 16_777_216
     let transport: any TelegramTransport
     let fileID: Int
     let diagnostics: PlaybackDiagnostics?
+    nonisolated let downloadOwner = TelegramPlaybackDownloadOwner()
     // TDLib's confirmed downloaded ranges remain readable while the server's
     // cache lease is held. Do not ask TDLib twice for every 256 KB HTTP write.
     private struct CachedSpan {
@@ -63,6 +73,7 @@ actor TelegramFileReader {
             try Task.checkCancellation()
             let json = try await transport.call("getFile", ["file_id": .integer(Int64(fileID))])
             guard let file = TelegramFile(json) else { throw TelegramError(code: -1, message: "Telegram file is unavailable.") }
+            try Task.checkCancellation()
             diagnostics?.sample(file)
             let available: Int64
             if file.completed {
@@ -87,7 +98,7 @@ actor TelegramFileReader {
                    !file.downloading || requestedEnd - offset < Self.prefetchBytes / 4 {
                     requestedEnd = offset + Self.prefetchBytes
                     diagnostics?.event("prefetch", ["offset": Double(offset), "available": Double(available), "limit": Double(Self.prefetchBytes)])
-                    _ = try? await transport.call("downloadFile", ["file_id": .integer(Int64(fileID)), "priority": .integer(16), "offset": .integer(offset), "limit": .integer(Self.prefetchBytes), "synchronous": .bool(false)])
+                    try await TelegramDownloads.shared.requestPlaybackRange(transport: transport, fileID: fileID, offset: offset, limit: Self.prefetchBytes, priority: 16, owner: downloadOwner)
                 }
                 cachedSpans.removeAll { $0.path == path && $0.start >= offset && $0.end <= offset + available }
                 cachedSpans.append(CachedSpan(path: path, start: offset, end: offset + available, completed: file.completed))
@@ -97,8 +108,7 @@ actor TelegramFileReader {
             if waitingID == nil { waitingID = diagnostics?.beginRead(offset, count: count) }
             if !requested || !file.downloading {
                 diagnostics?.event("download_request", ["offset": Double(offset), "limit": Double(max(Self.prefetchBytes, Int64(count))), "active": file.downloading ? 1 : 0, "prefix_offset": Double(file.downloadOffset), "prefix_bytes": Double(file.downloadedPrefixSize)])
-                _ = try await transport.call("downloadFile", ["file_id": .integer(Int64(fileID)), "priority": .integer(32),
-                    "offset": .integer(offset), "limit": .integer(max(Self.prefetchBytes, Int64(count))), "synchronous": .bool(false)])
+                try await TelegramDownloads.shared.requestPlaybackRange(transport: transport, fileID: fileID, offset: offset, limit: max(Self.prefetchBytes, Int64(count)), priority: 32, owner: downloadOwner)
                 requestedEnd = offset + max(Self.prefetchBytes, Int64(count))
                 requested = true
             }
@@ -147,6 +157,7 @@ final class TelegramStreamServer: @unchecked Sendable {
     private let size: Int64
     private let mime: String
     private let onFailure: @Sendable (String) -> Void
+    private let stopDownload: @Sendable () -> Void
     private let token = UUID().uuidString + UUID().uuidString
     private var stopped = false
     private let cacheLease: CacheUsage.Lease
@@ -156,6 +167,11 @@ final class TelegramStreamServer: @unchecked Sendable {
         self.cacheLease = try CacheUsage.shared.reader()
         self.diagnostics = diagnostics
         let reader = TelegramFileReader(transport: transport, fileID: id, diagnostics: diagnostics)
+        let owner = reader.downloadOwner
+        stopDownload = {
+            owner.close()
+            Task { @MainActor in await TelegramDownloads.shared.endPlayback(transport: transport, fileID: id, owner: owner) }
+        }
         if let localFile {
             readBytes = { offset, count in
                 let handle = try FileHandle(forReadingFrom: localFile); defer { try? handle.close() }
@@ -278,10 +294,16 @@ final class TelegramStreamServer: @unchecked Sendable {
         }
     }
     func stop() {
-        cacheLease.release()
-        listener.cancel()
-        let active = lock.withLock { stopped = true; let values = (Array(connections.values), Array(tasks.values)); connections = [:]; tasks = [:]; return values }
+        let active = lock.withLock { () -> ([NWConnection], [Task<Void, Never>])? in
+            guard !stopped else { return nil }
+            stopped = true
+            let values = (Array(connections.values), Array(tasks.values)); connections = [:]; tasks = [:]
+            return values
+        }
+        guard let active else { return }
+        stopDownload()
         active.0.forEach { $0.cancel() }; active.1.forEach { $0.cancel() }
+        listener.cancel(); cacheLease.release()
     }
-    deinit { listener.cancel() }
+    deinit { stop() }
 }

@@ -39,7 +39,7 @@ struct TelegramRootView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) { Button { account = true } label: { Image(systemName: "person.crop.circle") }.accessibilityLabel("Telegram account") }
                     ToolbarItemGroup(placement: .topBarTrailing) {
-                        Button { downloads = true } label: { Image(systemName: "arrow.down.circle") }.accessibilityLabel("Telegram downloads")
+                        Button { downloads = true } label: { Image(systemName: "arrow.down.circle") }.accessibilityLabel("Downloads")
                         Button { adding = true } label: { Image(systemName: "plus") }.accessibilityLabel("Open Telegram group")
                     }
                 }
@@ -52,7 +52,7 @@ struct TelegramRootView: View {
         }
         .sheet(item: $resumeMedia) { media in NavigationStack { TelegramMediaDetailView(media: media, store: store) } }
         .sheet(isPresented: $adding) { NavigationStack { TelegramOpenChatView(store: store) } }
-        .sheet(isPresented: $downloads) { NavigationStack { TelegramDownloadsView(store: store) } }
+        .navigationDestination(isPresented: $downloads) { DownloadsView(store: store) }
         .sheet(isPresented: $account) { NavigationStack { TelegramAccountView(store: store) } }
     }
     private var continueWatching: [TelegramMedia] {

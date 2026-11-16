@@ -221,6 +221,9 @@ actor TMDBClient {
         metadataRequest.timeoutInterval = 8
         let response = try await client.data(for: metadataRequest)
         guard let object = try JSONSerialization.jsonObject(with: response.data) as? [String: Any] else { return context }
+        let genres = object["genres"] as? [[String: Any]] ?? []
+        context.isAnime = object["original_language"] as? String == "ja"
+            && genres.contains { $0["id"] as? Int == 16 }
         let alternatives = object["alternative_titles"] as? [String: Any] ?? [:]
         let alternativesList = ((alternatives["results"] ?? alternatives["titles"]) as? [[String: Any]] ?? []).compactMap { $0["title"] as? String }
         let translations = (object["translations"] as? [String: Any])?["translations"] as? [[String: Any]] ?? []
@@ -236,6 +239,13 @@ actor TMDBClient {
             context.seasonYear = AnimeMatching.year(current?["air_date"] as? String)
             context.seasonEpisodeCount = current?["episode_count"] as? Int
             let preceding = seasons.filter { ($0["season_number"] as? Int ?? 0) > 0 && ($0["season_number"] as? Int ?? 0) < episode.seasonNumber }
+            if episode.seasonNumber > 0, preceding.count == episode.seasonNumber - 1,
+               preceding.allSatisfy({ ($0["episode_count"] as? Int ?? 0) > 0 }),
+               let count = context.seasonEpisodeCount, count > 0 {
+                let offset = preceding.reduce(0) { $0 + ($1["episode_count"] as? Int ?? 0) }
+                let relative = episode.number > count ? episode.number - offset : episode.number
+                if (1...count).contains(relative) { context.seasonRelativeEpisodeNumber = relative }
+            }
             context.absoluteEpisodeNumber = Self.absoluteEpisodeNumber(
                 episodeNumber: episode.number,
                 seasonNumber: episode.seasonNumber,
@@ -260,6 +270,18 @@ actor TMDBClient {
               precedingSeasonCounts.count == seasonNumber - 1,
               precedingSeasonCounts.allSatisfy({ $0 > 0 }) else { return nil }
         return precedingSeasonCounts.reduce(episodeNumber, +)
+    }
+
+    func person(id: Int, accessToken: String, language: String = "en-US") async throws -> TMDBPersonProfile {
+        guard !accessToken.isEmpty else { throw TMDBError.missingAccessToken }
+        var components = URLComponents(string: "https://api.themoviedb.org/3/person/\(id)")!
+        components.queryItems = [
+            URLQueryItem(name: "language", value: language),
+            URLQueryItem(name: "append_to_response", value: "combined_credits")
+        ]
+        guard let url = components.url else { throw AppError.invalidURL }
+        let response = try await client.data(for: authorizedRequest(url: url, accessToken: accessToken))
+        return try JSONDecoder().decode(TMDBPersonProfile.self, from: response.data)
     }
 
     func details(
@@ -1234,9 +1256,10 @@ private struct TMDBDetailsPayload: Decodable, Sendable {
             let id: Int
             let name: String
             let profilePath: String?
+            let character: String?
 
             enum CodingKeys: String, CodingKey {
-                case id, name
+                case id, name, character
                 case profilePath = "profile_path"
             }
         }
@@ -1261,9 +1284,11 @@ private struct TMDBDetailsPayload: Decodable, Sendable {
     let genres: [Genre]
     let seasons: [Season]?
     let credits: Credits?
+    let createdBy: [Credits.Person]?
 
     enum CodingKeys: String, CodingKey {
         case id, title, name, overview, runtime, genres, seasons, credits
+        case createdBy = "created_by"
         case originalTitle = "original_title"
         case originalName = "original_name"
         case releaseDate = "release_date"
@@ -1274,6 +1299,22 @@ private struct TMDBDetailsPayload: Decodable, Sendable {
         case externalIDs = "external_ids"
         case posterPath = "poster_path"
         case backdropPath = "backdrop_path"
+    }
+
+    private var castMembers: [CastMember] {
+        var seen = Set<Int>()
+        let creators = (createdBy ?? []).map {
+            CastMember(id: "tmdb-person-\($0.id)", name: $0.name,
+                       imageURL: $0.profilePath.flatMap(Self.imageURL), character: "Creator")
+        }
+        let actors = (credits?.cast ?? []).map {
+            CastMember(id: "tmdb-person-\($0.id)", name: $0.name,
+                       imageURL: $0.profilePath.flatMap(Self.imageURL), character: $0.character)
+        }
+        return (creators + actors).filter { member in
+            guard let id = member.tmdbID else { return false }
+            return seen.insert(id).inserted
+        }
     }
 
     func mediaItem(replacing item: MediaItem) -> MediaItem {
@@ -1293,13 +1334,7 @@ private struct TMDBDetailsPayload: Decodable, Sendable {
             posterURL: posterPath.flatMap(Self.imageURL) ?? item.posterURL,
             backdropURL: backdropPath.flatMap(Self.imageURL) ?? item.backdropURL,
             genres: genres.map { MediaGenre(id: "tmdb-\(id)-genre-\($0.id)", name: $0.name) },
-            cast: (credits?.cast ?? []).prefix(20).map {
-                CastMember(
-                    id: "tmdb-person-\($0.id)",
-                    name: $0.name,
-                    imageURL: $0.profilePath.flatMap(Self.imageURL)
-                )
-            },
+            cast: castMembers,
             seasons: (seasons ?? [])
                 .filter { ($0.episodeCount ?? 1) > 0 }
                 .map {
@@ -1360,7 +1395,7 @@ private struct TMDBSeasonPayload: Decodable, Sendable {
                 overview: overview?.isEmpty == false ? overview : nil,
                 posterURL: stillPath.flatMap {
                     URL(string: "https://image.tmdb.org/t/p/original\($0)")
-                },
+                } ?? show.backdropURL,
                 releaseDate: airDate
             )
         }
@@ -1440,6 +1475,76 @@ private extension MediaKind {
         case "movie": self = .movie
         case "tv": self = .series
         default: return nil
+        }
+    }
+}
+
+
+struct TMDBPersonProfile: Decodable, Sendable {
+    let name: String
+    let biography: String?
+    let birthday: String?
+    let deathday: String?
+    let placeOfBirth: String?
+    let knownForDepartment: String?
+    let profilePath: String?
+    private let combinedCredits: Credits?
+
+    private struct Credits: Decodable, Sendable {
+        let cast: [Credit]?
+        let crew: [Credit]?
+    }
+
+    private struct Credit: Decodable, Sendable {
+        let metadata: TMDBMetadataPayload
+        let kind: MediaKind?
+        let popularity: Double
+
+        init(from decoder: Decoder) throws {
+            metadata = try TMDBMetadataPayload(from: decoder)
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let type = try container.decodeIfPresent(String.self, forKey: .mediaType)
+            kind = type.flatMap(MediaKind.init(rawValue:))
+            popularity = try container.decodeIfPresent(Double.self, forKey: .popularity) ?? 0
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case mediaType = "media_type"
+            case popularity
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case name, biography, birthday, deathday
+        case placeOfBirth = "place_of_birth"
+        case knownForDepartment = "known_for_department"
+        case profilePath = "profile_path"
+        case combinedCredits = "combined_credits"
+    }
+
+    var imageURL: URL? {
+        profilePath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500\($0)") }
+    }
+
+    var popular: [TrendingTitle] {
+        var seen = Set<String>()
+        return ((combinedCredits?.cast ?? []) + (combinedCredits?.crew ?? []))
+            .sorted { $0.popularity > $1.popularity }
+            .compactMap { credit in
+                guard let kind = credit.kind, let title = credit.metadata.metadata(kind: kind),
+                      seen.insert(title.lookupKey).inserted else { return nil }
+                return title
+            }
+    }
+
+    var latest: [TrendingTitle] {
+        let today = Date.now.formatted(.iso8601.year().month().day().dateSeparator(.dash))
+        return popular.filter { title in
+            guard let date = title.releaseDate, !date.isEmpty else { return false }
+            return date <= today
+        }.sorted {
+            if $0.releaseDate == $1.releaseDate { return $0.lookupKey < $1.lookupKey }
+            return ($0.releaseDate ?? "") > ($1.releaseDate ?? "")
         }
     }
 }

@@ -13,6 +13,7 @@ final class TDLibTransport: TelegramTransport, @unchecked Sendable {
     private var cancelled: Set<String> = []
     private var closed = false
     private var receiverStarted = false
+    private let receiverGroup = DispatchGroup()
 
     private init() {
         let stream = AsyncStream<TelegramJSON>.makeStream()
@@ -21,10 +22,13 @@ final class TDLibTransport: TelegramTransport, @unchecked Sendable {
         // Never print Telegram requests, login codes, messages, or session keys.
         let log = "{\"@type\":\"setLogVerbosityLevel\",\"new_verbosity_level\":0}"
         log.withCString { _ = td_execute($0) }
+        // Register after TDLib constructs its native globals. Exit handlers run
+        // in reverse order, so stop receive before C++ destroys its queues.
+        atexit { TDLibTransport.shared.stopReceivingForProcessExit() }
     }
     private func startReceivingIfNeeded() {
         let shouldStart = lock.withLock {
-            guard !receiverStarted else { return false }; receiverStarted = true; return true
+            guard !receiverStarted, !closed else { return false }; receiverStarted = true; receiverGroup.enter(); return true
         }
         guard shouldStart else { return }
         DispatchQueue(label: "Velagram.Telegram.receive", qos: .userInitiated).async { [self] in
@@ -36,7 +40,18 @@ final class TDLibTransport: TelegramTransport, @unchecked Sendable {
                 deliver(response)
             }
             continuation.finish()
+            receiverGroup.leave()
         }
+    }
+    private func stopReceivingForProcessExit() {
+        let promises = lock.withLock {
+            closed = true
+            let values = Array(pending.values); pending.removeAll(); cancelled.removeAll()
+            return values
+        }
+        promises.forEach { $0.resume(throwing: CancellationError()) }
+        // receive has a 0.5-second timeout; join it before native teardown.
+        receiverGroup.wait()
     }
     private var isClosed: Bool { lock.withLock { closed } }
     private var currentClientID: Int32 { lock.withLock { clientID } }
@@ -74,6 +89,7 @@ final class TDLibTransport: TelegramTransport, @unchecked Sendable {
         lock.withLock { pending.removeValue(forKey: id) }?.resume(throwing: error)
     }
     private func deliver(_ response: TelegramJSON) {
+        guard !isClosed else { return }
         if let id = response["@extra"].string {
             let promise = lock.withLock { cancelled.remove(id); return pending.removeValue(forKey: id) }
             if response.type == "error" {

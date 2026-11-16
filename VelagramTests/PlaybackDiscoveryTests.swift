@@ -1,5 +1,6 @@
 // Adapted for Velagram iOS, November 2026. See NOTICE and LICENSE.
 import Foundation
+import AVFoundation
 import Testing
 @testable import Velagram
 
@@ -450,4 +451,223 @@ private struct RecapFixtureClient: HTTPClientProtocol {
         guard let body else { return try await AnimeFixtureClient(site: .hiAnime).data(for: request) }
         return HTTPResponse(data: Data(body.utf8), response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!)
     }
+}
+
+@Suite("Jellyfin and Emby integration")
+struct MediaServerIntegrationTests {
+    private func client(_ kind: MediaServer.Kind = .jellyfin) -> MediaServerClient {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [MediaServerFixtureProtocol.self]
+        return MediaServerClient(server: .init(id: UUID(), name: "Library", url: URL(string: "https://media.example/base")!, userID: "user", kind: kind), token: "test-token", session: URLSession(configuration: config))
+    }
+    @Test("Primary image dictionaries and episode numbers decode for both servers", arguments: MediaServer.Kind.allCases)
+    func artworkAndNumbering(kind: MediaServer.Kind) throws {
+        let item = try JSONDecoder().decode(ServerItem.self, from: Data(#"{"Id":"episode","Name":"Barbary Coast","Type":"Episode","ImageTags":{"Primary":"poster-tag"},"IndexNumber":3,"ParentIndexNumber":3}"#.utf8))
+        let url = try #require(client(kind).image(item))
+        #expect(url.path == "/base/Items/episode/Images/Primary")
+        #expect(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.contains(.init(name: "tag", value: "poster-tag")) == true)
+        #expect(item.detailLabel == "Season 3 · Episode 3")
+    }
+    @Test("Future providers get a named badge and can supply their own identity")
+    func extensibleSourceBadges() {
+        let preference = PlaybackSourcePreference(providerID: "future-source", serverName: "Release", audioLanguage: "")
+        let automatic = PlaybackCandidate(id: "future", preference: preference, providerName: "Future Source", subtitleKind: .unknown) {
+            throw AppError.noStream
+        }
+        #expect(automatic.sourceIdentity.name == "Future Source")
+        #expect(automatic.sourceIdentity.id == "future-source")
+        let identity = SourceIdentity(id: "custom", name: "Custom Library", systemImage: "externaldrive.fill", tint: .green)
+        let custom = PlaybackCandidate(id: "custom", preference: preference, providerName: "My server", subtitleKind: .unknown, sourceIdentity: identity) {
+            throw AppError.noStream
+        }
+        #expect(custom.sourceIdentity == identity)
+    }
+    @Test("Missing episode artwork falls back to its series poster")
+    func fallbackArtwork() throws {
+        let item = try JSONDecoder().decode(ServerItem.self, from: Data(#"{"Id":"episode","Name":"Episode","Type":"Episode","ImageTags":{},"SeriesId":"show","SeriesPrimaryImageTag":"series-tag"}"#.utf8))
+        #expect(client().image(item)?.path == "/base/Items/show/Images/Primary")
+    }
+    @Test("Catalog pages are not truncated at the first response")
+    func pagination() async throws {
+        let items = try await client().items()
+        #expect(items.map(\.id) == ["first", "second"])
+    }
+    @Test("Scanner finds the requested episode and preserves server authentication", arguments: MediaServer.Kind.allCases)
+    func scanner(kind: MediaServer.Kind) async throws {
+        let request = PlaybackRequest(media: .init(id: "1", providerID: "tmdb", kind: .series, title: "Example", tmdbID: 1),
+            episode: .init(id: "ep", providerID: "tmdb", showID: "1", seasonNumber: 3, number: 2, title: nil, overview: nil, posterURL: nil))
+        let provider = MediaServerPlaybackProvider(client: client(kind))
+        let candidates = try await provider.candidates(for: .init(request: request))
+        #expect(candidates.count == 1)
+        let candidate = try #require(candidates.first)
+        #expect(candidate.providerName == kind.rawValue + " · Library")
+        #expect(candidate.sourceIdentity == (kind == .jellyfin ? .jellyfin : .emby))
+        let source = try await candidate.resolve()
+        #expect(source.url.path == "/base/Videos/right/negotiated.m3u8")
+        let query = URLComponents(url: source.url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(query.contains(.init(name: "MediaSourceId", value: "actual-source")))
+        #expect(query.contains(.init(name: "PlaySessionId", value: "session-id")))
+        #expect(query.contains(.init(name: "VideoCodec", value: "h264")))
+        #expect(source.headers["X-Emby-Token"] == "test-token")
+    }
+    @MainActor @Test("Both server types publish scanner matches before title enrichment finishes", arguments: MediaServer.Kind.allCases)
+    func immediateScannerMatches(kind: MediaServer.Kind) async throws {
+        let request = PlaybackRequest(media: .init(id: "1", providerID: "tmdb", kind: .series, title: "Example", tmdbID: 1),
+            episode: .init(id: "ep", providerID: "tmdb", showID: "1", seasonNumber: 3, number: 2, title: nil, overview: nil, posterURL: nil))
+        let context = PlaybackLookupContext(request: request)
+        let provider = MediaServerPlaybackProvider(client: client(kind))
+        let model = TitleSourcesModel()
+        let enrichment = Task { try? await Task.sleep(for: .seconds(60)); return context }
+        let scan = Task { await model.scan(context: context, providers: [provider], store: TelegramStore(transport: TelegramFixtureTransport()), pages: 1, enrichedContext: enrichment) }
+        for _ in 0..<100 where !model.web.contains(where: { $0.preference.providerID == provider.id }) {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(model.web.contains { $0.preference.providerID == provider.id })
+        #expect(model.statuses[provider.id] == "1 sources")
+        #expect(model.searching)
+        scan.cancel(); enrichment.cancel()
+        await scan.value
+    }
+    @Test("Playback uses negotiated direct files or transcoding URLs", arguments: MediaServer.Kind.allCases)
+    func negotiatedPlayback(kind: MediaServer.Kind) async throws {
+        for id in ["direct", "prefixed", "absolute", "right"] {
+            let item = try JSONDecoder().decode(ServerItem.self, from: Data("{\"Id\":\"\(id)\",\"Name\":\"Episode\",\"Type\":\"Episode\"}".utf8))
+            let source = try await client(kind).playbackSource(item)
+            let query = URLComponents(url: source.url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+            #expect(query.contains(.init(name: "MediaSourceId", value: "actual-source")))
+            #expect(query.contains(.init(name: "api_key", value: "test-token")))
+            #expect(query.contains(.init(name: "PlaySessionId", value: "session-id")))
+            if id == "direct" {
+                #expect(source.url.path == "/base/Videos/direct/stream.mp4")
+                #expect(query.contains(.init(name: "Static", value: "true")))
+            } else {
+                #expect(source.url.path == "/base/Videos/\(id)/negotiated.m3u8")
+                #expect(query.contains(.init(name: "VideoCodec", value: "h264")))
+                #expect(source.headers["X-Media-Required"] == "required")
+            }
+        }
+    }
+    @Test("Server playback errors are reported before opening the player")
+    func playbackFailure() async throws {
+        let item = try JSONDecoder().decode(ServerItem.self, from: Data(#"{"Id":"denied","Name":"Episode","Type":"Episode"}"#.utf8))
+        await #expect(throws: MediaServerClient.PlaybackError.self) { try await client().playbackSource(item) }
+    }
+    @MainActor @Test("A negotiated direct stream starts actual AVPlayer video playback")
+    func negotiatedVideoStarts() async throws {
+        let client = client()
+        let item = try JSONDecoder().decode(ServerItem.self, from: Data(#"{"Id":"direct","Name":"Episode","Type":"Episode"}"#.utf8))
+        let source = try await client.playbackSource(item)
+        let relay = try CastHTTPRelay(headers: source.headers, loopbackOnly: true, session: client.session)
+        defer { relay.stop() }
+        let url = try await relay.start(origin: source.url)
+        let player = AVPlayer(url: url)
+        defer { player.pause(); player.replaceCurrentItem(with: nil) }
+        player.play()
+        for _ in 0..<100 where player.currentTime().seconds < 0.1 && player.currentItem?.status != .failed {
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        #expect(player.currentItem?.status == .readyToPlay)
+        #expect(player.currentTime().seconds >= 0.1)
+    }
+    @Test("Conflicting provider IDs reject a same-title match")
+    func wrongTitleIdentity() throws {
+        let item = try JSONDecoder().decode(ServerItem.self, from: Data(#"{"Id":"wrong","Name":"Example","Type":"Movie","ProviderIds":{"Tmdb":"999"}}"#.utf8))
+        #expect(!MediaServerPlaybackProvider.matches(item, context: .init(request: PlaybackDiscoveryTests.request)))
+    }
+    @Test("Quick Connect initiates, polls, and exchanges a secret for a token")
+    func quickConnect() async throws {
+        let client = client()
+        let enabled: Bool = try await MediaServerClient.quickRequest(url: client.server.url, path: "QuickConnect/Enabled", session: client.session)
+        #expect(enabled)
+        let pending: MediaServerClient.QuickConnect = try await MediaServerClient.quickRequest(url: client.server.url, path: "QuickConnect/Initiate", method: "POST", session: client.session)
+        #expect(pending.Code == "123456")
+        #expect(!pending.Authenticated)
+        let approved: MediaServerClient.QuickConnect = try await MediaServerClient.quickRequest(url: client.server.url, path: "QuickConnect/Connect", secret: pending.Secret, session: client.session)
+        #expect(approved.Authenticated)
+        let auth: MediaServerClient.Authentication = try await MediaServerClient.quickRequest(url: client.server.url, path: "Users/AuthenticateWithQuickConnect", method: "POST", secret: pending.Secret, session: client.session)
+        #expect(auth.AccessToken == "approved-token")
+        #expect(auth.User.Id == "user")
+    }
+}
+
+private final class MediaServerFixtureProtocol: URLProtocol, @unchecked Sendable {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        let url = request.url!
+        let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        func parameter(_ name: String) -> String? { query.first { $0.name == name }?.value }
+        var status = 200
+        let json: String
+        switch url.lastPathComponent {
+        case "stream.mp4":
+            guard parameter("Static") == "true", parameter("MediaSourceId") == "actual-source", parameter("api_key") == "test-token",
+                  let fixture = Bundle(for: MediaServerFixtureProtocol.self).url(forResource: "TelegramNativePlayback", withExtension: "mp4"),
+                  let bytes = try? Data(contentsOf: fixture) else {
+                client?.urlProtocol(self, didFailWithError: URLError(.resourceUnavailable)); return
+            }
+            var body = bytes
+            var fields = ["Content-Type": "video/mp4", "Accept-Ranges": "bytes"]
+            if let range = request.value(forHTTPHeaderField: "Range"), range.hasPrefix("bytes=") {
+                let bounds = range.dropFirst(6).split(separator: "-", omittingEmptySubsequences: false)
+                let start = bounds.first.flatMap { Int($0) } ?? 0
+                let end = min(bounds.count > 1 ? (Int(bounds[1]) ?? bytes.count - 1) : bytes.count - 1, bytes.count - 1)
+                if start >= 0 && start <= end {
+                    body = bytes.subdata(in: start..<(end + 1)); status = 206
+                    fields["Content-Range"] = "bytes \(start)-\(end)/\(bytes.count)"
+                }
+            }
+            fields["Content-Length"] = String(body.count)
+            client?.urlProtocol(self, didReceive: HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: fields)!, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: body); client?.urlProtocolDidFinishLoading(self)
+            return
+        case "PlaybackInfo":
+            var body = request.httpBody
+            if body == nil, let stream = request.httpBodyStream {
+                stream.open(); defer { stream.close() }
+                var data = Data(); var buffer = [UInt8](repeating: 0, count: 4096)
+                while stream.hasBytesAvailable {
+                    let count = stream.read(&buffer, maxLength: buffer.count)
+                    if count <= 0 { break }; data.append(contentsOf: buffer.prefix(count))
+                }
+                body = data
+            }
+            let payload = body.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+            let profile = payload?["DeviceProfile"] as? [String: Any]
+            if request.httpMethod != "POST" || payload?["UserId"] as? String != "user" || profile?["TranscodingProfiles"] == nil || request.value(forHTTPHeaderField: "X-Emby-Token") != "test-token" { status = 400 }
+            let id = url.deletingLastPathComponent().lastPathComponent
+            if id == "denied" { json = #"{"ErrorCode":"NotAllowed","MediaSources":[]}"# }
+            else if id == "direct" { json = #"{"PlaySessionId":"session-id","MediaSources":[{"Id":"actual-source","Container":"mp4","SupportsDirectPlay":true}]}"# }
+            else {
+                let prefix = id == "absolute" ? "https://media.example/base/" : id == "prefixed" ? "/base/" : "/"
+                json = "{\"PlaySessionId\":\"session-id\",\"MediaSources\":[{\"Id\":\"actual-source\",\"SupportsDirectPlay\":false,\"TranscodingUrl\":\"\(prefix)Videos/\(id)/negotiated.m3u8?VideoCodec=h264&AudioCodec=aac\",\"RequiredHttpHeaders\":{\"X-Media-Required\":\"required\"}}]}"
+            }
+        case "Enabled": json = "true"
+        case "Initiate":
+            if request.httpMethod != "POST" { status = 405 }
+            json = #"{"Code":"123456","Secret":"secret","Authenticated":false}"#
+        case "Connect":
+            if parameter("Secret") != "secret" { status = 401 }
+            json = #"{"Code":"123456","Secret":"secret","Authenticated":true}"#
+        case "AuthenticateWithQuickConnect":
+            if request.httpMethod != "POST" || request.value(forHTTPHeaderField: "Authorization") == nil { status = 401 }
+            json = #"{"AccessToken":"approved-token","User":{"Id":"user"}}"#
+        default:
+            if request.value(forHTTPHeaderField: "X-Emby-Token") != "test-token" { status = 401 }
+            if parameter("IncludeItemTypes") == "Series" {
+                json = #"{"Items":[{"Id":"show","Name":"Example","Type":"Series","ProviderIds":{"Tmdb":"1"}}],"TotalRecordCount":1}"#
+            } else if parameter("IncludeItemTypes") == "Episode" {
+                if parameter("ParentId") != "show" || parameter("Recursive") != "true" || parameter("ParentIndexNumber") != "3" { status = 400 }
+                json = #"{"Items":[{"Id":"wrong-season","Name":"Other","Type":"Episode","ParentIndexNumber":2,"IndexNumber":2},{"Id":"wrong-episode","Name":"Other","Type":"Episode","ParentIndexNumber":3,"IndexNumber":1},{"Id":"right","Name":"Requested episode","Type":"Episode","ParentIndexNumber":3,"IndexNumber":2}],"TotalRecordCount":3}"#
+            } else if parameter("StartIndex") == "0" {
+                json = #"{"Items":[{"Id":"first","Name":"First"}],"TotalRecordCount":2}"#
+            } else {
+                json = #"{"Items":[{"Id":"second","Name":"Second"}],"TotalRecordCount":2}"#
+            }
+        }
+        client?.urlProtocol(self, didReceive: HTTPURLResponse(url: url, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(json.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() { }
 }

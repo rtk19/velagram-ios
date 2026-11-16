@@ -33,6 +33,36 @@ struct TelegramCatalogSearchTests {
         #expect(TelegramCatalogMatching.score(media("Example.Show.S02E02.mkv"), context: request) == nil)
         #expect(TelegramCatalogMatching.score(media("Another.Show.S01E02.mkv"), context: request) == nil)
     }
+    @Test func animeSearchesAndMatchesAbsoluteAndRelativeNumbers() {
+        let item = MediaItem(id: "naruto", providerID: "tmdb", kind: .series, title: "Naruto")
+        let ep = MediaEpisode(id: "naruto:2:11", providerID: "tmdb", showID: "naruto", seasonNumber: 2, number: 11, title: nil, overview: nil, posterURL: nil)
+        var request = PlaybackLookupContext(request: PlaybackRequest(media: item, episode: ep))
+        request.isAnime = true
+        request.absoluteEpisodeNumber = 63
+        request.seasonRelativeEpisodeNumber = 11
+        let queries = TelegramCatalogMatching.queries(request, language: .english)
+        #expect(queries.contains("naruto S02E11"))
+        #expect(queries.contains("naruto E63"))
+        for name in ["Naruto E63.mkv", "Naruto - 063 [1080p].mkv", "Naruto Episode 63.mkv", "Naruto S02E11.mkv"] {
+            #expect(TelegramCatalogMatching.score(media(name), context: request) != nil)
+        }
+        for name in ["Naruto E64.mkv", "Naruto E163.mkv", "Naruto S02E63.mkv", "Other Anime E63.mkv"] {
+            #expect(TelegramCatalogMatching.score(media(name), context: request) == nil)
+        }
+        request.isAnime = false
+        #expect(!TelegramCatalogMatching.queries(request).contains("naruto E63"))
+        #expect(TelegramCatalogMatching.score(media("Naruto E63.mkv"), context: request) == nil)
+    }
+    @Test func animeCatalogContinuousNumberAlsoMatchesRelativeRelease() {
+        let item = MediaItem(id: "naruto", providerID: "tmdb", kind: .series, title: "Naruto")
+        let ep = MediaEpisode(id: "naruto:2:63", providerID: "tmdb", showID: "naruto", seasonNumber: 2, number: 63, title: nil, overview: nil, posterURL: nil)
+        var request = PlaybackLookupContext(request: PlaybackRequest(media: item, episode: ep))
+        request.isAnime = true
+        request.absoluteEpisodeNumber = 63
+        request.seasonRelativeEpisodeNumber = 11
+        #expect(TelegramCatalogMatching.queries(request).contains("naruto S02E11"))
+        #expect(TelegramCatalogMatching.score(media("Naruto S02E11.mkv"), context: request) != nil)
+    }
     @Test func moviesRejectRemakesAndPartialWordTitleMatches() {
         let request = context(title: "It", year: "2017-09-01", episode: nil)
         #expect(TelegramCatalogMatching.score(media("It.2017.1080p.mkv"), context: request) != nil)

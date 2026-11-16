@@ -9,6 +9,40 @@ private let decodableTestImageData = Data(base64Encoded:
 
 @Suite("TMDB trending client")
 struct TMDBClientTests {
+    @Test("Person projects combine crew and cast, deduplicate identities, and sort by release date")
+    func personProjects() async throws {
+        let payload = Data("""
+        {"name":"Example Person","combined_credits":{
+          "cast":[
+            {"id":1,"media_type":"movie","title":"Older","release_date":"2020-01-01","popularity":20},
+            {"id":1,"media_type":"tv","name":"Recent Series","first_air_date":"2025-01-01","popularity":10},
+            {"id":9,"media_type":"movie","title":"Future","release_date":"2999-01-01","popularity":1}
+          ],
+          "crew":[
+            {"id":1,"media_type":"movie","title":"Older","release_date":"2020-01-01","popularity":20},
+            {"id":2,"media_type":"movie","title":"Directed","release_date":"2024-01-01","popularity":15},
+            {"id":3,"media_type":"movie","title":"Excluded","adult":true,"popularity":100}
+          ]}}
+        """.utf8)
+        let transport = RecordingTMDBTransport(data: payload)
+        let profile = try await TMDBClient(client: transport).person(id: 42, accessToken: "token")
+        #expect(profile.popular.map(\.lookupKey) == ["movie:1", "movie:2", "tv:1", "movie:9"])
+        #expect(profile.latest.map(\.lookupKey) == ["tv:1", "movie:2", "movie:1"])
+        let request = try #require(await transport.lastRequest)
+        #expect(request.url?.path == "/3/person/42")
+        #expect(request.url?.query?.contains("combined_credits") == true)
+    }
+
+    @Test("Profiles with no credits have no project sections and old cast records still decode")
+    func emptyPersonProjects() throws {
+        let profile = try JSONDecoder().decode(TMDBPersonProfile.self, from: Data(#"{"name":"Person"}"#.utf8))
+        #expect(profile.popular.isEmpty)
+        #expect(profile.latest.isEmpty)
+        let member = try JSONDecoder().decode(CastMember.self, from: Data(#"{"id":"tmdb-person-42","name":"Person"}"#.utf8))
+        #expect(member.tmdbID == 42)
+        #expect(member.character == nil)
+    }
+
     @Test("Movie and series catalogs omit Top 10 Today")
     func catalogsOmitTopToday() {
         for kind in [MediaKind.movie, .series] {

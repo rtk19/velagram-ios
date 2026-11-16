@@ -47,6 +47,26 @@ final class LibraryStore: ObservableObject {
         load()
     }
 
+    func reconcileEpisodes(_ episodes: [MediaEpisode], in show: MediaItem) {
+        var changed = false
+        for index in progress.indices {
+            let previous = progress[index]
+            guard sameTitle(previous.media, as: show), let old = previous.episode,
+                  let episode = episodes.first(where: {
+                      $0.seasonNumber == old.seasonNumber && $0.number == old.number
+                  }), old != episode else { continue }
+            progress[index] = WatchProgress(
+                contentID: episode.id, providerID: show.providerID, media: show, episode: episode,
+                position: previous.position, duration: previous.duration, updatedAt: previous.updatedAt
+            )
+            if currentSeriesProgressKeys[seriesKey(for: previous.media)] == progressKey(for: previous) {
+                currentSeriesProgressKeys[seriesKey(for: show)] = progressKey(for: progress[index])
+            }
+            changed = true
+        }
+        if changed { saveProgress() }
+    }
+
     func exportUserData() throws -> Data {
         try backupService.exportData()
     }
@@ -88,6 +108,23 @@ final class LibraryStore: ObservableObject {
         guard rate.isFinite, rate > 0 else { return }
         playbackRates[titleKey(for: request.media)] = rate
         savePlaybackRates()
+    }
+
+    @Published private(set) var playedSources: [String: [String]] = [:]
+
+    private func sourceHistoryKey(_ request: PlaybackRequest) -> String {
+        request.media.artworkIdentityKey + ":" + (request.episode.map { "s\($0.seasonNumber)e\($0.number)" } ?? "movie")
+    }
+
+    func sourceHistory(for request: PlaybackRequest) -> [String] {
+        playedSources[sourceHistoryKey(request)] ?? []
+    }
+
+    func recordPlayedSource(_ id: String, for request: PlaybackRequest) {
+        let key = sourceHistoryKey(request)
+        guard playedSources[key]?.first != id else { return }
+        playedSources[key] = [id] + (playedSources[key] ?? []).filter { $0 != id }
+        save(playedSources, to: "played-sources.json")
     }
 
     func sourcePreference(for request: PlaybackRequest) -> PlaybackSourcePreference? {
@@ -381,6 +418,7 @@ final class LibraryStore: ObservableObject {
         currentSeriesProgressKeys = [:]
         playbackRates = [:]
         sourcePreferences = [:]
+        playedSources = read([String: [String]].self, from: "played-sources.json") ?? [:]
         subtitleVisibilityPreferences = [:]
         subtitleSelectionPreferences = [:]
         playerZoomedToFillByTitle = [:]
